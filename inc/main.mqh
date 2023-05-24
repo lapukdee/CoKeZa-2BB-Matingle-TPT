@@ -125,3 +125,21 @@ int   BBand_EventBreak()
    return Chart.EventBreak_R;
 }
 //+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int   cIsNewBar_Save = -1;
+bool              IsNewBar()
+{
+   int getBar = iBars(NULL, exBB_TF);
+
+   if(cIsNewBar_Save != getBar) {
+      cIsNewBar_Save = getBar;
+
+      if(cIsNewBar_Save != -1)
+         return   true;
+
+   }
+
+   return   false;
+}
+//+------------------------------------------------------------------+
