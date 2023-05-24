@@ -11,12 +11,14 @@
 
 #property strict
 
+string   EA_Identity_Short = "2BB";
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 extern   string            exEAname       = "v" + string(ea_version);   //# 2BB-Matingle-TPT
 extern   string            exOrder        = " --------------- Setting --------------- ";   // --------------------------------------------------
-extern   int               exMagicnumber  =  26102022;         //• Magicnumber
+extern   int               exMagicnumber  =  0;         //• Magicnumber
 
 extern   ENUM_TIMEFRAMES   exBB_TF  = PERIOD_CURRENT;
 extern   int               exBB_A_Period  = 20;
@@ -26,6 +28,7 @@ extern   int               exBB_B_Period  = 30;
 
 //---
 #include "inc/main.mqh"
+#include "inc/CPort.mqh"
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -52,9 +55,15 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
 {
-   if(IsNewBar()) {
+   Port.Calculator();
 
+   if(IsNewBar()) {
+      //BBand_EventBreak();
    }
+
+   string   C = "";
+   C += "T" + ":" + Port.cnt_All + "\n";
+   Comment(C);
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
