@@ -79,46 +79,48 @@ int   BBand_EventBreak()
       Chart.EventBreak_B = -1;
 
       {
-         if(__Open > BBand_A[0][MODE_MAIN]) {
-            Print(__LINE__, "# ");
-            if(_Close > BBand_A[0][MODE_UPPER]) {
-               Chart.EventBreak_A = OP_SELL;
+         {
+            bool IsStand_A = __Open < BBand_A[0][MODE_UPPER] && __Open > BBand_A[0][MODE_LOWER];
+
+            if(IsStand_A) {
                Print(__LINE__, "# ");
+               if(_Close > BBand_A[0][MODE_UPPER]) {
+                  Chart.EventBreak_A = OP_SELL;
+                  Print(__LINE__, "# ");
+               }
+               if(_Close < BBand_A[0][MODE_LOWER]) {
+                  Chart.EventBreak_A = OP_BUY;
+                  Print(__LINE__, "# ");
+               }
             }
+            Print(__LINE__, "# ", "Chart.EventBreak_A:* ",  Chart.EventBreak_A);
          }
-         if(__Open < BBand_A[0][MODE_MAIN] ) {
-            Print(__LINE__, "# ");
-            if(_Close < BBand_A[0][MODE_UPPER]) {
-               Chart.EventBreak_A = OP_BUY;
+         {
+            bool IsStand_B = __Open < BBand_B[0][MODE_UPPER] && __Open > BBand_B[0][MODE_LOWER];
+
+            if(IsStand_B) {
                Print(__LINE__, "# ");
+               if(_Close > BBand_B[0][MODE_UPPER]) {
+                  Chart.EventBreak_B = OP_SELL;
+                  Print(__LINE__, "# ");
+               }
+               if(_Close < BBand_B[0][MODE_LOWER]) {
+                  Chart.EventBreak_B = OP_BUY;
+                  Print(__LINE__, "# ");
+               }
             }
+            Print(__LINE__, "# ", "Chart.EventBreak_B:* ",  Chart.EventBreak_B);
          }
-         Print(__LINE__, "# ", "Chart.EventBreak_A:* ",  Chart.EventBreak_A);
+
       }
-      {
-         if(__Open > BBand_B[0][MODE_MAIN]  ) {
-            Print(__LINE__, "# ");
-            if(_Close > BBand_B[0][MODE_UPPER]) {
-               Chart.EventBreak_B = OP_SELL;
-               Print(__LINE__, "# ");
-            }
-         }
-         if(__Open < BBand_B[0][MODE_MAIN]) {
-            Print(__LINE__, "# ");
-            if(_Close < BBand_B[0][MODE_UPPER]) {
-               Chart.EventBreak_B = OP_BUY;
-               Print(__LINE__, "# ");
-            }
-         }
-         Print(__LINE__, "# ", "Chart.EventBreak_B:* ",  Chart.EventBreak_B);
-      }
+
    }
    {
       if(Chart.EventBreak_A != -1 &&
          Chart.EventBreak_A == Chart.EventBreak_B) {
          Chart.EventBreak_R = Chart.EventBreak_A;
       }
-      Print("");
+      Print("*");
       Print(__LINE__, "# ", "Chart.EventBreak_R:* ",  Chart.EventBreak_R);
    }
 
