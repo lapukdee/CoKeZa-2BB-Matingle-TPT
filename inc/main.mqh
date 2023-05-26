@@ -135,8 +135,13 @@ bool              IsNewBar()
    int getBar = iBars(NULL, exBB_TF);
 
    if(cIsNewBar_Save != getBar) {
-      cIsNewBar_Save = getBar;
 
+      if(cIsNewBar_Save == -1) {
+         cIsNewBar_Save = getBar;
+         return   false;
+      }
+   
+      cIsNewBar_Save = getBar;
       if(cIsNewBar_Save != -1)
          return   true;
 

@@ -39,6 +39,8 @@ int OnInit()
 
    BBand_EventBreak();
 
+   Port.Calculator();
+
 //---
    return(INIT_SUCCEEDED);
 }
@@ -56,20 +58,22 @@ void OnDeinit(const int reason)
 void OnTick()
 {
    Port.Calculator();
-   
+
    //---
 
-   int OP_Hold = -1;
-   
+   int Hold_OP = -1, Hold_Cnt = -1;
+
    //---
-   
+
    if(IsNewBar()) {
-      //BBand_EventBreak();
+      BBand_EventBreak();
 
       if(Port.cnt_All == 0) {
 
          if(Chart.EventBreak_R != -1) {
+
             /* SendOrder */
+            OrderSend_Active(Chart.EventBreak_R, 0);
 
          }
 
@@ -77,15 +81,21 @@ void OnTick()
 
 
          if(Port.cnt_Buy > 0) {
-            OP_Hold = OP_BUY;
+            Hold_OP  = OP_BUY;
+            Hold_Cnt = Port.cnt_Buy;
          }
          if(Port.cnt_Sel > 0) {
-            OP_Hold = OP_SELL;
+            Hold_OP  = OP_SELL;
+            Hold_Cnt = Port.cnt_Sel;
          }
          //
-         if(OP_Hold != -1) {
+         if(Hold_OP != -1) {
             /* Detect Distance */
 
+            
+            if(IsDetectDistance) {
+               OrderSend_Active(Hold_OP, Hold_Cnt);
+            }
          }
 
       }
@@ -96,8 +106,8 @@ void OnTick()
    C += "cnt_Buy" + ":" + Port.cnt_Buy + "\n";
    C += "cnt_Sel" + ":" + Port.cnt_Sel + "\n";
    C += "\n";
-   
-   C += "EventBreak_R" + ":" + OP_Hold + "\n";
+
+   C += "EventBreak_R" + ":" + Hold_OP + "\n";
 
    C += "EventBreak_R" + ":" + Chart.EventBreak_R + "\n";
    C += "EventBreak_A" + ":" + Chart.EventBreak_A + "\n";

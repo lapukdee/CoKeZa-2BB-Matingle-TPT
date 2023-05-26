@@ -197,3 +197,29 @@ private:
 };
 CPort Port  =  new CPort;
 //+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool  OrderSend_Active(int OP_Commander, int CountOfHold)
+{
+   Print(__FUNCSIG__);
+   
+   double   PricePlace = (OP_Commander == OP_BUY) ? Ask : Bid;
+
+   double   Order_Lots = exOrder_LotStart * (MathPow(exOrder_LotMulti, CountOfHold));
+   Order_Lots = NormalizeDouble(Order_Lots, 2);
+
+   Print(__LINE__, "# Order_Lots: ", Order_Lots);
+
+
+   int ticket = OrderSend(Symbol(), OP_Commander, Order_Lots, PricePlace, 3, 0, 0,
+                          EA_Identity_Short + "[" + CountOfHold + "]",
+                          exMagicnumber);
+
+   return   true;
+}
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
