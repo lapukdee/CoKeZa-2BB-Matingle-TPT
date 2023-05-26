@@ -30,17 +30,16 @@ double BBand_getValue_Result[1][3];
 bool  BBand_getValue(int vPeriod_)
 {
    string            symbol      = NULL;      // symbol
-   ENUM_TIMEFRAMES   timeframe   = PERIOD_CURRENT;      // timeframe
+   ENUM_TIMEFRAMES   timeframe   = exBB_TF;      // timeframe
 
-   double       deviation = 2;      // standard deviations
-   int          bands_shift = 0;    // bands shift
-   int          applied_price = PRICE_CLOSE;  // applied price
+
+
 
    int          shift = Global.RoomFocus;           // shift
 
-   BBand_getValue_Result[0][MODE_MAIN]  = iBands(symbol, timeframe, vPeriod_, deviation, bands_shift, applied_price, MODE_MAIN, shift);
-   BBand_getValue_Result[0][MODE_UPPER] = iBands(symbol, timeframe, vPeriod_, deviation, bands_shift, applied_price, MODE_UPPER, shift);
-   BBand_getValue_Result[0][MODE_LOWER] = iBands(symbol, timeframe, vPeriod_, deviation, bands_shift, applied_price, MODE_LOWER, shift);
+   BBand_getValue_Result[0][MODE_MAIN]  = iBands(symbol, timeframe, vPeriod_, exBB_Deviation, exBB_BandsShift, exBB_Applied_price, MODE_MAIN, shift);
+   BBand_getValue_Result[0][MODE_UPPER] = iBands(symbol, timeframe, vPeriod_, exBB_Deviation, exBB_BandsShift, exBB_Applied_price, MODE_UPPER, shift);
+   BBand_getValue_Result[0][MODE_LOWER] = iBands(symbol, timeframe, vPeriod_, exBB_Deviation, exBB_BandsShift, exBB_Applied_price, MODE_LOWER, shift);
 
 
    BBand_getValue_Result[0][MODE_MAIN] = NormalizeDouble(BBand_getValue_Result[0][MODE_MAIN], Digits);

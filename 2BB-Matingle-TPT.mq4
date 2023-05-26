@@ -17,16 +17,22 @@ string   EA_Identity_Short = "2BB";
 //|                                                                  |
 //+------------------------------------------------------------------+
 extern   string            exEAname       = "v" + string(ea_version);   //# 2BB-Matingle-TPT
-extern   string            exOrder        = " --------------- Setting --------------- ";   // --------------------------------------------------
-extern   int               exMagicnumber  =  0;         //• Magicnumber
+extern   string            exSetting      = " --------------- Setting --------------- ";   // --------------------------------------------------
+extern   int               exMagicnumber  =  0;                //• Magicnumber
 
-extern   ENUM_TIMEFRAMES   exBB_TF  = PERIOD_CURRENT;
-extern   int               exBB_A_Period  = 20;
-extern   int               exBB_B_Period  = 30;
+extern   string            exBB        = " --------------- BBand Signal --------------- ";   // --------------------------------------------------
 
-extern   double            exOrder_LotStart = 0.01;
-extern   double            exOrder_LotMulti = 2;
-extern   int               exOrder_InDistancePoint =  300;
+extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_CURRENT;       //• Magicnumber
+extern   int               exBB_A_Period        = 20;                   //• A - Period
+extern   int               exBB_B_Period        = 30;                   //• B - Period
+extern   int               exBB_Applied_price   = PRICE_CLOSE;          //• Applied price
+extern   double            exBB_Deviation       = 2;                    //• Standard Deviations
+extern   int               exBB_BandsShift      = 0;                    //• Bands Shift
+
+extern   string            exOrder        = " --------------- Martingale --------------- ";   // --------------------------------------------------
+extern   double            exOrder_LotStart = 0.01;            //• Lot - Start
+extern   double            exOrder_LotMulti = 2;               //• Lot - Multi
+extern   int               exOrder_InDistancePoint =  300;     //• Distance of Order New (Point)
 
 //---
 #include "inc/main.mqh"
@@ -81,7 +87,6 @@ void OnTick()
 
       } else {
 
-
          if(Port.cnt_Buy > 0) {
             Hold_OP  = OP_BUY;
             Hold_Cnt = Port.cnt_Buy;
@@ -97,7 +102,17 @@ void OnTick()
             bool  IsDetectDistance = Port.Point_Distance >= exOrder_InDistancePoint;
 
             if(IsDetectDistance) {
+
                OrderSend_Active(Hold_OP, Hold_Cnt);
+
+            } else {
+
+               /* Detect TakeProfit */
+
+               /* if Order Avg is + action same SL by Start Sl Price at Cap Price
+                  Funtion Modufy Group
+               */
+               Fixme .pls Detect TakeProfit
             }
          }
 
