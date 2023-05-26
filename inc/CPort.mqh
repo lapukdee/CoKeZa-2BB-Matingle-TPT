@@ -6,9 +6,9 @@ class CPort
 public:
    int                  cnt_Buy, cnt_Sel, cnt_All;
    int                  cnt_BuyPen, cnt_SelPen, cnt_AllPen;
-   
+
    double               Point_Buy, Point_Sel;
-   
+
    double               sumProd_Buy, sumLot_Buy;
    double               sumProd_Sel, sumLot_Sel, sumLot_All;
    double               sumHold_Buy, sumHold_Sel, sumHold_All;
@@ -17,7 +17,7 @@ public:
 
    //---
    double               ActivePlace_TOP, ActivePlace_BOT;
-   double               ActivePoint_TOP, ActivePoint_BOT;
+   int               ActivePoint_TOP, ActivePoint_BOT;
 
    CPort(void)
    {
@@ -49,7 +49,6 @@ public:
       sumHold_Sel = 0;
       sumHold_All = 0;
 
-      //Docker_total   = -1;
       Point_Distance = -1;
 
       ActivePlace_TOP = -1;
@@ -63,18 +62,6 @@ public:
    {
       //if(OrdersTotal() >= 1)
       {
-         //         cnt_Buy = cnt_Sel = cnt_All = 0;
-         //         cnt_BuyPen = cnt_SelPen = 0;
-         //         Point_Buy = Point_Sel = 0;
-         //         sumProd_Buy = sumLot_Buy = 0;
-         //         sumProd_Sel = sumLot_Sel = 0;
-         //         //
-         //         sumHold_Buy =  sumHold_Sel = sumHold_All = 0 ;
-         //
-         //         Price_Master   = -1;
-         //         Docker_total   = -1;
-         //         Point_Distance = -1;
-
          Init();
 
          int   __OrdersTotal   =  OrdersTotal();
@@ -137,11 +124,18 @@ public:
             //Global.Price_Master
             if(cnt_All > 0) {
 
-               ActivePoint_TOP = (ActivePlace_TOP - Ask) / Point;
-               ActivePoint_BOT = (Bid - ActivePlace_BOT) / Point;
+               ActivePoint_TOP = int((ActivePlace_TOP - Ask) / Point); //Sell
+               ActivePoint_BOT = int((Bid - ActivePlace_BOT) / Point); //Buy
 
                Draw_SumProduct(5, ActivePlace_TOP, clrYellow, "_ActivePlace_TOP");
                Draw_SumProduct(5, ActivePlace_BOT, clrYellow, "_ActivePlace_BOT");
+
+               if(cnt_Sel > 0) {
+                  Point_Distance = ActivePoint_TOP;
+               }
+               if(cnt_Buy > 0) {
+                  Point_Distance = ActivePoint_BOT;
+               }
 
             } else {
                Draw_SumProduct(5, 0, clrYellow, "_ActivePlace_TOP");
@@ -176,6 +170,8 @@ public:
 
          sumHold_All = sumHold_Buy + sumHold_Sel;
 
+
+
       }
    }
 private:
@@ -199,13 +195,14 @@ CPort Port  =  new CPort;
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 bool  OrderSend_Active(int OP_Commander, int CountOfHold)
 {
    Print(__FUNCSIG__);
-   
+
    double   PricePlace = (OP_Commander == OP_BUY) ? Ask : Bid;
 
    double   Order_Lots = exOrder_LotStart * (MathPow(exOrder_LotMulti, CountOfHold));
@@ -215,7 +212,7 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
 
 
    int ticket = OrderSend(Symbol(), OP_Commander, Order_Lots, PricePlace, 3, 0, 0,
-                          EA_Identity_Short + "[" + CountOfHold + "]",
+                          EA_Identity_Short + "[" + string(CountOfHold) + "]",
                           exMagicnumber);
 
    return   true;
