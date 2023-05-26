@@ -56,13 +56,54 @@ void OnDeinit(const int reason)
 void OnTick()
 {
    Port.Calculator();
+   
+   //---
 
+   int OP_Hold = -1;
+   
+   //---
+   
    if(IsNewBar()) {
       //BBand_EventBreak();
+
+      if(Port.cnt_All == 0) {
+
+         if(Chart.EventBreak_R != -1) {
+            /* SendOrder */
+
+         }
+
+      } else {
+
+
+         if(Port.cnt_Buy > 0) {
+            OP_Hold = OP_BUY;
+         }
+         if(Port.cnt_Sel > 0) {
+            OP_Hold = OP_SELL;
+         }
+         //
+         if(OP_Hold != -1) {
+            /* Detect Distance */
+
+         }
+
+      }
    }
 
    string   C = "";
-   C += "T" + ":" + Port.cnt_All + "\n";
+   C += "cnt_All" + ":" + Port.cnt_All + "\n";
+   C += "cnt_Buy" + ":" + Port.cnt_Buy + "\n";
+   C += "cnt_Sel" + ":" + Port.cnt_Sel + "\n";
+   C += "\n";
+   
+   C += "EventBreak_R" + ":" + OP_Hold + "\n";
+
+   C += "EventBreak_R" + ":" + Chart.EventBreak_R + "\n";
+   C += "EventBreak_A" + ":" + Chart.EventBreak_A + "\n";
+   C += "EventBreak_B" + ":" + Chart.EventBreak_B + "\n";
+
+
    Comment(C);
 }
 //+------------------------------------------------------------------+
