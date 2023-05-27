@@ -16,13 +16,13 @@ string   EA_Identity_Short = "2BB";
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-extern   string            exEAname       = "v" + string(ea_version);   //# 2BB-Matingle-TPT
-extern   string            exSetting      = " --------------- Setting --------------- ";   // --------------------------------------------------
-extern   int               exMagicnumber  =  0;                //• Magicnumber
+extern   string            exEAname       =  "v" + string(ea_version);   //# 2BB-Matingle-TPT
+extern   string            exSetting      =  " --------------- Setting --------------- ";   // --------------------------------------------------
+extern   int               exMagicnumber  =  2852023;                //• Magicnumber
 
 extern   string            exBB        = " --------------- BBand Signal --------------- ";   // --------------------------------------------------
 
-extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_CURRENT;       //• Magicnumber
+extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_H1;            //• Magicnumber
 extern   int               exBB_A_Period        = 20;                   //• A - Period
 extern   int               exBB_B_Period        = 30;                   //• B - Period
 extern   int               exBB_Applied_price   = PRICE_CLOSE;          //• Applied price
@@ -30,14 +30,14 @@ extern   double            exBB_Deviation       = 2;                    //• St
 extern   int               exBB_BandsShift      = 0;                    //• Bands Shift
 
 extern   string            exOrder        = " --------------- Martingale --------------- ";   // --------------------------------------------------
-extern   double            exOrder_LotStart        = 0.01;           //• Lot - Start
-extern   double            exOrder_LotMulti        = 2;              //• Lot - Multi
-extern   int               exOrder_InDistancePoint = 300;           //• Distance of Order New (Point)
+extern   double            exOrder_LotStart        = 0.01;  //• Lot - Start
+extern   double            exOrder_LotMulti        = 2;     //• Lot - Multi
+extern   int               exOrder_InDistancePoint = 300;   //• Distance of Order New (Point)
 
 extern   string            exProfit       = " --------------- Profit --------------- ";   // --------------------------------------------------
-extern   int               exProfit_Tail  =  50;
-extern   int               exProfit_Start =  50;
-extern   int               exProfit_Step  =  10;
+extern   int               exProfit_Tail  =  150;  //• Tailing (Point)
+extern   int               exProfit_Start =  200;  //• Start (Point)
+extern   int               exProfit_Step  =  25;   //• Step (Point)
 //---
 #include "inc/main.mqh"
 #include "inc/CPort.mqh"
@@ -48,7 +48,9 @@ extern   int               exProfit_Step  =  10;
 int OnInit()
 {
 //---
-
+   {
+      ChartSetInteger(0, CHART_SHOW_GRID, false);
+   }
    BBand_EventBreak();
 
    Port.Calculator();
@@ -172,29 +174,32 @@ void OnTick()
             */
             Print(__FUNCSIG__, __LINE__, "# ", "PortHold.PortIsHave_TP: ", PortHold.PortIsHave_TP);
 
-            if(PortHold.PortIsHave_TP) {
 
+
+
+            if(PortHold.PortIsHave_TP) {
+               int   Distance = -1;
+               Print(__FUNCSIG__, __LINE__, "# ", "PortHold.OP: ", PortHold.OP);
                if(PortHold.OP == OP_BUY) {
 
-                  int   Distance = int((Bid - PortHold.PortSL_Price) / Point); //Buy
-
-                  if(Distance >= exProfit_Tail + exProfit_Step) {
-                     //--- >> Order Modify Group
-                  }
-
+                  Distance = int((Bid - PortHold.PortSL_Price) / Point); //Buy
+                  Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                }
                if(PortHold.OP == OP_SELL) {
 
-                  int   Distance = int((PortHold.PortSL_Price - Ask) / Point); //Buy
-
-                  if(Distance >= exProfit_Tail + exProfit_Step) {
-                     //--- >> Order Modify Group
-                  }
-
+                  Distance = int((PortHold.PortSL_Price - Ask) / Point); //Buy
+                  Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                }
+//---
+               int   Distance_Test  =  ( PortHold.Cnt  == 1) ? exProfit_Start : exProfit_Tail + exProfit_Step;
+               Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
 
+               if(Distance >= Distance_Test) {
+                  //--- >> Order Modify Group
+                  OrderModifys_SL(PortHold.OP);
+               }
             } else {
-
+               OrderModifys_SL(PortHold.OP);
             }
 
 
