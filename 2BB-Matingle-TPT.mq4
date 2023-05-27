@@ -1,4 +1,23 @@
 ﻿//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+#define     eaLOCK_Account ""
+/*
+   #Example.
+   "45843128,80000007"     => allow 2 acc.
+   ""                      => Account not locked
+
+*/
+#define     eaLOCK_Date    "7.6.2023"
+/*
+   - Compared to the center time +0
+   #Example.
+   "31.12.2023"   => Day,Month,Year
+   ""             => Unlimited
+
+*/
+#include "inc/ProduckLock.mqh"
+//+------------------------------------------------------------------+
 //|                                             2BB-Matingle-TPT.mq4 |
 //|                               Copyright 2023, Thongeax Studio TH |
 //|                               https://www.facebook.com/lapukdee/ |
@@ -11,12 +30,16 @@
 
 #property strict
 
+#property   description    "Account Allow : "+eaLOCK_Account
+#property   description    "Expire Date : "+eaLOCK_Date
+
 string   EA_Identity_Short = "2BB";
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-extern   string            exEAname       =  "v" + string(ea_version);   //# 2BB-Matingle-TPT
+extern   string            exEAname       =  "v" + string(ea_version);  //# 2BB-Matingle-TPT
+extern   string            exLOCK_Date    =  string(eaLOCK_Date);       //# Lock
 extern   string            exSetting      =  " --------------- Setting --------------- ";   // --------------------------------------------------
 extern   int               exMagicnumber  =  2852023;                //• Magicnumber
 
@@ -52,10 +75,12 @@ int OnInit()
       ChartSetInteger(0, CHART_SHOW_GRID, false);
       ChartSetInteger(0, CHART_SHOW_ASK_LINE, true);
    }
+
    BBand_EventBreak();
 
    Port.Calculator();
 
+   OnTick();
 //---
    return(INIT_SUCCEEDED);
 }
@@ -114,7 +139,9 @@ void OnTick()
          BBand_EventBreak();
          Print(__FUNCSIG__, __LINE__, "#");
 
-         if(Chart.EventBreak_R != -1) {
+         if(Chart.EventBreak_R != -1
+            && ProduckLock.Checker()                    //--- << ** ProduckLock
+           ) {
 
             /* SendOrder */
             OrderSend_Active(Chart.EventBreak_R, 0);
@@ -211,26 +238,29 @@ void OnTick()
    }
 
    string   C = "";
+
+   C += "Produck" + ": " + ProduckLock.Passport() + "\n";
+
    C += "cnt_All" + ": " + Port.cnt_All + "\n";
    C += "cnt_Buy" + ": " + Port.cnt_Buy + "\n";
    C += "cnt_Sel" + ": " + Port.cnt_Sel + "\n";
    C += "\n";
 
-   C += "PortHold.OP" + ": " + PortHold.OP + "\n";
-   C += "PortHold.Cnt" + ": " + PortHold.Cnt + "\n";
-   C += "PortHold.Value" + ": " + PortHold.Value + "\n";
+   C += "Port.OP" + ": " + PortHold.OP + "\n";
+   C += "Port.Cnt" + ": " + PortHold.Cnt + "\n";
+   C += "Port.Value" + ": " + PortHold.Value + "\n";
 
-   C += "EventBreak_R" + ": " + Chart.EventBreak_R + "\n";
-   C += "EventBreak_A" + ":  " + Chart.EventBreak_A + "\n";
-   C += "EventBreak_B" + ":" + Chart.EventBreak_B + "\n";
+   C += "Event_R" + ": " + Chart.EventBreak_R + "\n";
+   C += "Event_A" + ":  " + Chart.EventBreak_A + "\n";
+   C += "Event_B" + ":" + Chart.EventBreak_B + "\n";
    C += "\n";
 
-   C += "ActivePoint_TOP" + ": " + Port.ActivePlace_TOP + "\n";
-   C += "ActivePoint_BOT" + ": " + Port.ActivePlace_BOT + "\n";
+   C += "A.PR.TOP" + ": " + Port.ActivePlace_TOP + "\n";
+   C += "A.PR.BOT" + ": " + Port.ActivePlace_BOT + "\n";
 
-   C += "ActivePoint_TOP" + ": " + Port.ActivePoint_TOP + "\n";
-   C += "ActivePoint_BOT" + ": " + Port.ActivePoint_BOT + "\n";
-   C += "Point_Distance" + ": " + Port.Point_Distance + "\n";
+   C += "A.P.TOP" + ": " + Port.ActivePoint_TOP + "\n";
+   C += "A.P.BOT" + ": " + Port.ActivePoint_BOT + "\n";
+   C += "Distance" + ": " + Port.Point_Distance + "\n";
 
    C += "\n";
 
