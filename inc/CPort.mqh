@@ -232,7 +232,7 @@ public:
             Point_Buy = (Bid - sumProd_Buy) * MathPow(10, Digits);
 
          } else {
-            ObjectsDeleteAll(0, EA_Identity_Short + "_SumProduct" + string(OP_BUY), 0, OBJ_HLINE);
+            //ObjectsDeleteAll(0, EA_Identity_Short + "_SumProduct" + string(OP_BUY), 0, OBJ_HLINE);
          }
          //--
          if(cnt_Sel >= 1) {
@@ -242,9 +242,9 @@ public:
          if(sumProd_Sel != 0) {
             Draw_SumProduct(OP_SELL, sumProd_Sel, clrTomato);
             Point_Sel = (sumProd_Sel - Ask) * MathPow(10, Digits);
-            
+
          } else {
-            ObjectsDeleteAll(0, EA_Identity_Short + "_SumProduct" + string(OP_SELL), 0, OBJ_HLINE);
+            //ObjectsDeleteAll(0, EA_Identity_Short + "_SumProduct" + string(OP_SELL), 0, OBJ_HLINE);
          }
          //--
 
@@ -296,11 +296,23 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
 //+------------------------------------------------------------------+
 bool  OrderModifys_SL(int  OP)
 {
+   Print(__FUNCSIG__, __LINE__, "# ", "OP: ", OP);
+
    double   __SL_New = -1;
    if(OP == OP_BUY) {
       __SL_New   = NormalizeDouble(Bid - (exProfit_Tail * Point), Digits);
+
+      if(Port.sumProd_Buy > __SL_New) {
+         return   false;
+      }
+      Draw_HLine(OP_BUY, Bid, clrWhite, "SL_New*Bid");
    } else {
       __SL_New   = NormalizeDouble(Ask + (exProfit_Tail * Point), Digits);
+
+      if(Port.sumProd_Sel < __SL_New) {
+         return   false;
+      }
+      Draw_HLine(OP_SELL, Ask, clrWhite, "SL_New*Ask");
    }
 
    int   __OrdersTotal   =  OrdersTotal();
@@ -330,5 +342,31 @@ bool  OrderModifys_SL(int  OP)
    return   true;
 }
 //+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int   exOrder_InDistancePoint_Get(int  OrederCNT)
+{
+   double   res   = exOrder_InDistancePoint;// * MathPow(1.15, OrederCNT);
+   return   int(res * -1);
+}
+//+------------------------------------------------------------------+
 
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void  Draw_HLine(int OP, double Price, color Clr, string   name = "_SumProduct", bool  IsAdd_IdName = true)
+{
+   string ObjTag = (IsAdd_IdName) ?
+                   EA_Identity_Short + "_" + name + "_" + string(OP) :
+                   name + "_" + string(OP);
+
+   if(!ObjectCreate(ObjTag, OBJ_HLINE, 0, 0, Price)) {
+
+   }
+   if(ObjectMove(0, ObjTag, 0, 0, Price)) {
+   }
+   ObjectSet(ObjTag, OBJPROP_BACK, false);
+   ObjectSet(ObjTag, OBJPROP_COLOR, Clr);
+}
 //+------------------------------------------------------------------+
