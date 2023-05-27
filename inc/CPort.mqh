@@ -20,13 +20,13 @@ public:
    int                  ActivePoint_TOP, ActivePoint_BOT;
    //---
 
-   CPort(void)
+                     CPort(void)
    {
       Init();
 
       //SymbolInfoDouble
    };
-   ~CPort(void) {};
+                    ~CPort(void) {};
    void              Init()
    {
       cnt_Buy  =  0;
@@ -61,13 +61,13 @@ public:
    }
 
    struct sPortIsHave_TP {
-      int      Counter;
-      double   Price;
-      bool     IsSL_Eq;
+      int            Counter;
+      double         Price;
+      bool           IsSL_Eq;
 
-      bool     IsResult;
+      bool           IsResult;
 
-      void  Clear()
+      void           Clear()
       {
          Counter = 0;
          Price   = -1;
@@ -75,8 +75,8 @@ public:
          IsResult =  false;
       }
    };
-   sPortIsHave_TP  PortIsHaveTP_Buy;
-   sPortIsHave_TP  PortIsHaveTP_Sell;
+   sPortIsHave_TP    PortIsHaveTP_Buy;
+   sPortIsHave_TP    PortIsHaveTP_Sell;
 
    void              Calculator()
    {
@@ -130,6 +130,10 @@ public:
                               PortIsHaveTP_Buy.IsSL_Eq = false;
                            }
                         }
+                     } else {
+                        PortIsHaveTP_Buy.Counter   = cnt_Buy;
+                        PortIsHaveTP_Buy.IsSL_Eq   = true;
+                        PortIsHaveTP_Buy.Price     = OrderOpenPrice();
                      }
                   }
                }
@@ -155,13 +159,17 @@ public:
                      if(_OrderStopLoss != 0) {
                         PortIsHaveTP_Sell.Counter++;
 
-                        if(PortIsHaveTP_Buy.Price == -1) {
-                           PortIsHaveTP_Buy.Price = _OrderStopLoss;
+                        if(PortIsHaveTP_Sell.Price == -1) {
+                           PortIsHaveTP_Sell.Price = _OrderStopLoss;
                         } else {
-                           if(PortIsHaveTP_Buy.Price != _OrderStopLoss) {
-                              PortIsHaveTP_Buy.IsSL_Eq = false;
+                           if(PortIsHaveTP_Sell.Price != _OrderStopLoss) {
+                              PortIsHaveTP_Sell.IsSL_Eq = false;
                            }
                         }
+                     } else {
+                        PortIsHaveTP_Sell.Counter  = cnt_Sel;
+                        PortIsHaveTP_Sell.IsSL_Eq  = true;
+                        PortIsHaveTP_Sell.Price    = OrderOpenPrice();
                      }
                   }
                }
@@ -170,23 +178,22 @@ public:
                   cnt_SelPen++;
                }
 
-
-
             }
          }
          {
 
-            if(cnt_Sel > 0) {
-               PortIsHaveTP_Buy.IsResult = (cnt_Sel == PortIsHaveTP_Buy.Counter) &&
-                                           PortIsHaveTP_Buy.IsSL_Eq;
-
-
-            }
             if(cnt_Buy > 0) {
+               PortIsHaveTP_Buy.IsResult = (cnt_Buy == PortIsHaveTP_Buy.Counter) &&
+                                           PortIsHaveTP_Buy.IsSL_Eq;
+            } else {
+               PortIsHaveTP_Buy.IsResult = true;
+            }
+
+            if(cnt_Sel > 0) {
                PortIsHaveTP_Sell.IsResult = (cnt_Sel == PortIsHaveTP_Sell.Counter) &&
                                             PortIsHaveTP_Sell.IsSL_Eq;
-
-
+            } else {
+               PortIsHaveTP_Sell.IsResult = true;
             }
          }
          //---
@@ -221,8 +228,9 @@ public:
 
          }
          if(sumProd_Buy != 0) {
-            //Draw_SumProduct(OP_BUY, sumProd_Buy, clrRoyalBlue);
+            Draw_SumProduct(OP_BUY, sumProd_Buy, clrRoyalBlue);
             Point_Buy = (Bid - sumProd_Buy) * MathPow(10, Digits);
+
          } else {
             ObjectsDeleteAll(0, EA_Identity_Short + "_SumProduct" + string(OP_BUY), 0, OBJ_HLINE);
          }
@@ -232,16 +240,15 @@ public:
 
          }
          if(sumProd_Sel != 0) {
-            //Draw_SumProduct(OP_SELL, sumProd_Sel, clrTomato);
+            Draw_SumProduct(OP_SELL, sumProd_Sel, clrTomato);
             Point_Sel = (sumProd_Sel - Ask) * MathPow(10, Digits);
+            
          } else {
             ObjectsDeleteAll(0, EA_Identity_Short + "_SumProduct" + string(OP_SELL), 0, OBJ_HLINE);
          }
          //--
 
          sumHold_All = sumHold_Buy + sumHold_Sel;
-
-
 
       }
    }
