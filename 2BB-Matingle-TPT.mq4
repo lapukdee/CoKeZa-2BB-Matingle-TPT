@@ -50,6 +50,7 @@ int OnInit()
 //---
    {
       ChartSetInteger(0, CHART_SHOW_GRID, false);
+      ChartSetInteger(0, CHART_SHOW_ASK_LINE, true);
    }
    BBand_EventBreak();
 
@@ -153,11 +154,13 @@ void OnTick()
             //--- Port Negtive
             Print(__FUNCSIG__, __LINE__, "# ", "Port Negtive");
 
-            bool  IsDetectDistance = Port.Point_Distance <= -exOrder_InDistancePoint;
+            bool  IsDetectDistance = Port.Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
 
             if(IsDetectDistance) {
 
-               OrderSend_Active(PortHold.OP, PortHold.Cnt);
+               if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
+                  OrderModifys_SL(PortHold.OP);
+               }
 
             }
 
@@ -173,9 +176,6 @@ void OnTick()
                Funtion Modufy Group
             */
             Print(__FUNCSIG__, __LINE__, "# ", "PortHold.PortIsHave_TP: ", PortHold.PortIsHave_TP);
-
-
-
 
             if(PortHold.PortIsHave_TP) {
                int   Distance = -1;
