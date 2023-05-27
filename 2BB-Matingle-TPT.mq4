@@ -74,6 +74,16 @@ struct sPortHold {
 
    bool              PortIsHave_TP;
    double            PortSL_Price;
+
+   void              Clear()
+   {
+      OP = -1;
+      Cnt = -1;
+      Value = -1;
+
+      PortIsHave_TP = false;
+      PortSL_Price = -1;
+   }
 };
 sPortHold   PortHold = {-1, -1, -1, false, -1};
 //
@@ -97,7 +107,7 @@ void OnTick()
    if(IsNewBar()) {
 
       if(Port.cnt_All == 0) {
-      
+
          BBand_EventBreak();
          Print(__FUNCSIG__, __LINE__, "#");
 
@@ -108,87 +118,91 @@ void OnTick()
 
          }
 
-      } else {
+      }
+
+   } else {
+
+      PortHold.Clear();
+
+      if(Port.cnt_Buy > 0) {
+         PortHold.OP             = OP_BUY;
+         PortHold.Cnt            = Port.cnt_Buy;
+         PortHold.Value          = Port.sumHold_Buy;
+
+         PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Buy.IsResult;
+         PortHold.PortSL_Price   = Port.PortIsHaveTP_Buy.Price;
+
+      }
+      if(Port.cnt_Sel > 0) {
+         PortHold.OP             = OP_SELL;
+         PortHold.Cnt            = Port.cnt_Sel;
+         PortHold.Value          = Port.sumHold_Sel;
+
+         PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Sell.IsResult;
+         PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
+
+      }
+      //
+      if(PortHold.OP != -1) {
+         /* Detect Distance */
          Print(__FUNCSIG__, __LINE__, "#");
 
-         if(Port.cnt_Buy > 0) {
-            PortHold.OP             = OP_BUY;
-            PortHold.Cnt            = Port.cnt_Buy;
-            PortHold.Value          = Port.sumHold_Buy;
+         if(PortHold.Value < 0) {
+            //--- Port Negtive
+            Print(__FUNCSIG__, __LINE__, "# ", "Port Negtive");
 
-            PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Buy.IsResult;
-            PortHold.PortSL_Price   = Port.PortIsHaveTP_Buy.Price;
+            bool  IsDetectDistance = Port.Point_Distance <= -exOrder_InDistancePoint;
 
-         }
-         if(Port.cnt_Sel > 0) {
-            PortHold.OP             = OP_SELL;
-            PortHold.Cnt            = Port.cnt_Sel;
-            PortHold.Value          = Port.sumHold_Sel;
+            if(IsDetectDistance) {
 
-            PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Sell.IsResult;
-            PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
+               OrderSend_Active(PortHold.OP, PortHold.Cnt);
 
-         }
-         //
-         if(PortHold.OP != -1) {
-            /* Detect Distance */
-            Print(__FUNCSIG__, __LINE__, "#");
+            }
 
-            if(PortHold.Value < 0) {
-               //--- Port Negtive
-               Print(__FUNCSIG__, __LINE__, "# ", "Port Negtive");
+         } else {
+            //--- Port Positive
+            Print(__FUNCSIG__, __LINE__, "# ", "Port Positive");
 
-               bool  IsDetectDistance = Port.Point_Distance >= exOrder_InDistancePoint;
+            /* ##Thongeak ##TPtailing */
 
-               if(IsDetectDistance) {
+            /* Detect TakeProfit */
 
-                  OrderSend_Active(PortHold.OP, PortHold.Cnt);
+            /* if Order Avg is + action same SL by Start Sl Price at Cap Price
+               Funtion Modufy Group
+            */
+            Print(__FUNCSIG__, __LINE__, "# ", "PortHold.PortIsHave_TP: ", PortHold.PortIsHave_TP);
+
+            if(PortHold.PortIsHave_TP) {
+
+               if(PortHold.OP == OP_BUY) {
+
+                  int   Distance = int((Bid - PortHold.PortSL_Price) / Point); //Buy
+
+                  if(Distance >= exProfit_Tail + exProfit_Step) {
+                     //--- >> Order Modify Group
+                  }
+
+               }
+               if(PortHold.OP == OP_SELL) {
+
+                  int   Distance = int((PortHold.PortSL_Price - Ask) / Point); //Buy
+
+                  if(Distance >= exProfit_Tail + exProfit_Step) {
+                     //--- >> Order Modify Group
+                  }
 
                }
 
             } else {
-               //--- Port Positive
-               Print(__FUNCSIG__, __LINE__, "# ", "Port Positive");
-
-               /* ##Thongeak ##TPtailing */
-
-               /* Detect TakeProfit */
-
-               /* if Order Avg is + action same SL by Start Sl Price at Cap Price
-                  Funtion Modufy Group
-               */
-               if(PortHold.PortIsHave_TP) {
-
-                  if(PortHold.OP == OP_BUY) {
-
-                     int   Distance = int((Bid - PortHold.PortSL_Price) / Point); //Buy
-
-                     if(Distance >= exProfit_Tail + exProfit_Step) {
-                        //--- >> Order Modify Group
-                     }
-
-                  }
-                  if(PortHold.OP == OP_SELL) {
-
-                     int   Distance = int((PortHold.PortSL_Price - Ask) / Point); //Buy
-
-                     if(Distance >= exProfit_Tail + exProfit_Step) {
-                        //--- >> Order Modify Group
-                     }
-
-                  }
-
-               } else {
-
-               }
-
-
-               //------
 
             }
-         }
 
+
+            //------
+
+         }
       }
+
    }
 
    string   C = "";
