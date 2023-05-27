@@ -68,18 +68,18 @@ void OnDeinit(const int reason)
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
 struct sPortHold {
-   int OP;
-   int Cnt;
-   double   Value;
+   int               OP;
+   int               Cnt;
+   double            Value;
 
-   bool     PortIsHave_TP;
-   double   PortSL_Price;
+   bool              PortIsHave_TP;
+   double            PortSL_Price;
 };
 sPortHold   PortHold = {-1, -1, -1, false, -1};
 //
 struct sTP_MM {
-   double   Tail_Price;
-   void  Clear()
+   double            Tail_Price;
+   void              Clear()
    {
       Tail_Price = -1;
    }
@@ -92,12 +92,14 @@ void OnTick()
 {
    Port.Calculator();
 
-   //---
+//---
 
    if(IsNewBar()) {
-      BBand_EventBreak();
 
       if(Port.cnt_All == 0) {
+      
+         BBand_EventBreak();
+         Print(__FUNCSIG__, __LINE__, "#");
 
          if(Chart.EventBreak_R != -1) {
 
@@ -107,6 +109,7 @@ void OnTick()
          }
 
       } else {
+         Print(__FUNCSIG__, __LINE__, "#");
 
          if(Port.cnt_Buy > 0) {
             PortHold.OP             = OP_BUY;
@@ -129,9 +132,12 @@ void OnTick()
          //
          if(PortHold.OP != -1) {
             /* Detect Distance */
+            Print(__FUNCSIG__, __LINE__, "#");
 
             if(PortHold.Value < 0) {
                //--- Port Negtive
+               Print(__FUNCSIG__, __LINE__, "# ", "Port Negtive");
+
                bool  IsDetectDistance = Port.Point_Distance >= exOrder_InDistancePoint;
 
                if(IsDetectDistance) {
@@ -142,6 +148,7 @@ void OnTick()
 
             } else {
                //--- Port Positive
+               Print(__FUNCSIG__, __LINE__, "# ", "Port Positive");
 
                /* ##Thongeak ##TPtailing */
 
@@ -185,26 +192,26 @@ void OnTick()
    }
 
    string   C = "";
-   C += "cnt_All" + ":" + Port.cnt_All + "\n";
-   C += "cnt_Buy" + ":" + Port.cnt_Buy + "\n";
-   C += "cnt_Sel" + ":" + Port.cnt_Sel + "\n";
+   C += "cnt_All" + ": " + Port.cnt_All + "\n";
+   C += "cnt_Buy" + ": " + Port.cnt_Buy + "\n";
+   C += "cnt_Sel" + ": " + Port.cnt_Sel + "\n";
    C += "\n";
 
-   C += "PortHold.OP" + ":" + PortHold.OP + "\n";
-   C += "PortHold.Cnt" + ":" + PortHold.Cnt + "\n";
-   C += "PortHold.Value" + ":" + PortHold.Value + "\n";
+   C += "PortHold.OP" + ": " + PortHold.OP + "\n";
+   C += "PortHold.Cnt" + ": " + PortHold.Cnt + "\n";
+   C += "PortHold.Value" + ": " + PortHold.Value + "\n";
 
-   C += "EventBreak_R" + ":" + Chart.EventBreak_R + "\n";
-   C += "EventBreak_A" + ":" + Chart.EventBreak_A + "\n";
+   C += "EventBreak_R" + ": " + Chart.EventBreak_R + "\n";
+   C += "EventBreak_A" + ":  " + Chart.EventBreak_A + "\n";
    C += "EventBreak_B" + ":" + Chart.EventBreak_B + "\n";
    C += "\n";
 
-   C += "ActivePoint_TOP" + ":" + Port.ActivePlace_TOP + "\n";
-   C += "ActivePoint_BOT" + ":" + Port.ActivePlace_BOT + "\n";
+   C += "ActivePoint_TOP" + ": " + Port.ActivePlace_TOP + "\n";
+   C += "ActivePoint_BOT" + ": " + Port.ActivePlace_BOT + "\n";
 
-   C += "ActivePoint_TOP" + ":" + Port.ActivePoint_TOP + "\n";
-   C += "ActivePoint_BOT" + ":" + Port.ActivePoint_BOT + "\n";
-   C += "Point_Distance" + ":" + Port.Point_Distance + "\n";
+   C += "ActivePoint_TOP" + ": " + Port.ActivePoint_TOP + "\n";
+   C += "ActivePoint_BOT" + ": " + Port.ActivePoint_BOT + "\n";
+   C += "Point_Distance" + ": " + Port.Point_Distance + "\n";
 
    C += "\n";
 
