@@ -17,7 +17,8 @@ public:
 
    //---
    double               ActivePlace_TOP, ActivePlace_BOT;
-   int               ActivePoint_TOP, ActivePoint_BOT;
+   int                  ActivePoint_TOP, ActivePoint_BOT;
+   //---
 
    CPort(void)
    {
@@ -56,13 +57,37 @@ public:
 
       ActivePoint_TOP = 0;
       ActivePoint_BOT = 0;
-
+      //---
    }
+
+   struct sPortIsHave_TP {
+      int      Counter;
+      double   Price;
+      bool     IsSL_Eq;
+
+      bool     IsResult;
+
+      void  Clear()
+      {
+         Counter = 0;
+         Price   = -1;
+         IsSL_Eq = true;
+         IsResult =  false;
+      }
+   };
+   sPortIsHave_TP  PortIsHaveTP_Buy;
+   sPortIsHave_TP  PortIsHaveTP_Sell;
+
    void              Calculator()
    {
       //if(OrdersTotal() >= 1)
       {
          Init();
+
+         {
+            PortIsHaveTP_Buy.Clear();
+            PortIsHaveTP_Sell.Clear();
+         }
 
          int   __OrdersTotal   =  OrdersTotal();
          for(int icnt = 0; icnt < __OrdersTotal; icnt++) { // for loop
@@ -92,7 +117,21 @@ public:
                   sumLot_All += OrderLots();
 
                   sumHold_Buy += OrderProfit() + OrderCommission() + OrderSwap();
+                  {
+                     /* Check SL */
+                     double   _OrderStopLoss = OrderStopLoss();
+                     if(_OrderStopLoss != 0) {
+                        PortIsHaveTP_Buy.Counter++;
 
+                        if(PortIsHaveTP_Buy.Price == -1) {
+                           PortIsHaveTP_Buy.Price = _OrderStopLoss;
+                        } else {
+                           if(PortIsHaveTP_Buy.Price != _OrderStopLoss) {
+                              PortIsHaveTP_Buy.IsSL_Eq = false;
+                           }
+                        }
+                     }
+                  }
                }
 
                if(OrderType_ == OP_BUYSTOP || OrderType_ == OP_BUYLIMIT) {
@@ -109,12 +148,44 @@ public:
                   sumLot_All += OrderLots();
 
                   sumHold_Sel += OrderProfit() + OrderCommission() + OrderSwap();
+                  {
+                     /* Check SL */
+                     double   _OrderStopLoss = OrderStopLoss();
 
+                     if(_OrderStopLoss != 0) {
+                        PortIsHaveTP_Sell.Counter++;
+
+                        if(PortIsHaveTP_Buy.Price == -1) {
+                           PortIsHaveTP_Buy.Price = _OrderStopLoss;
+                        } else {
+                           if(PortIsHaveTP_Buy.Price != _OrderStopLoss) {
+                              PortIsHaveTP_Buy.IsSL_Eq = false;
+                           }
+                        }
+                     }
+                  }
                }
 
                if(OrderType_ == OP_SELLSTOP || OrderType_ == OP_SELLLIMIT) {
                   cnt_SelPen++;
                }
+
+
+
+            }
+         }
+         {
+
+            if(cnt_Sel > 0) {
+               PortIsHaveTP_Buy.IsResult = (cnt_Sel == PortIsHaveTP_Buy.Counter) &&
+                                           PortIsHaveTP_Buy.IsSL_Eq;
+
+
+            }
+            if(cnt_Buy > 0) {
+               PortIsHaveTP_Sell.IsResult = (cnt_Sel == PortIsHaveTP_Sell.Counter) &&
+                                            PortIsHaveTP_Sell.IsSL_Eq;
+
 
             }
          }
@@ -195,10 +266,6 @@ CPort Port  =  new CPort;
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-
-//+------------------------------------------------------------------+
-//|                                                                  |
-//+------------------------------------------------------------------+
 bool  OrderSend_Active(int OP_Commander, int CountOfHold)
 {
    Print(__FUNCSIG__);
@@ -215,6 +282,44 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
                           EA_Identity_Short + "[" + string(CountOfHold) + "]",
                           exMagicnumber);
 
+   return   true;
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool  OrderModifys_SL(int  OP)
+{
+   double   __SL_New = -1;
+   if(OP == OP_BUY) {
+      __SL_New   = NormalizeDouble(Bid - (exProfit_Tail * Point), Digits);
+   } else {
+      __SL_New   = NormalizeDouble(Ask + (exProfit_Tail * Point), Digits);
+   }
+
+   int   __OrdersTotal   =  OrdersTotal();
+   for(int icnt = 0; icnt < __OrdersTotal; icnt++) {
+
+      if(OrderSelect(icnt, SELECT_BY_POS, MODE_TRADES) &&
+         OrderSymbol() == Symbol() &&
+         OrderMagicNumber() == exMagicnumber &&
+         OrderType() == OP) {
+
+         double   OrderStopLoss_ = OrderStopLoss();
+
+         if(OrderStopLoss_ != __SL_New) {
+
+            int   OrderTicket_   = OrderTicket();
+
+            bool res = OrderModify(OrderTicket_, OrderOpenPrice(), __SL_New, 0, 0);
+            if(!res) {
+               Print(__FUNCSIG__, __LINE__, "#" + "@", OrderTicket_, " Error in OrderModify. Error code=", GetLastError());
+               return   false;
+            } else
+               Print(__FUNCSIG__, __LINE__, "#" + "@", OrderTicket_, " Order modified successfully.");
+         }
+
+      }
+   }
    return   true;
 }
 //+------------------------------------------------------------------+

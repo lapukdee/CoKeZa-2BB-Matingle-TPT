@@ -30,10 +30,14 @@ extern   double            exBB_Deviation       = 2;                    //• St
 extern   int               exBB_BandsShift      = 0;                    //• Bands Shift
 
 extern   string            exOrder        = " --------------- Martingale --------------- ";   // --------------------------------------------------
-extern   double            exOrder_LotStart = 0.01;            //• Lot - Start
-extern   double            exOrder_LotMulti = 2;               //• Lot - Multi
-extern   int               exOrder_InDistancePoint =  300;     //• Distance of Order New (Point)
+extern   double            exOrder_LotStart        = 0.01;           //• Lot - Start
+extern   double            exOrder_LotMulti        = 2;              //• Lot - Multi
+extern   int               exOrder_InDistancePoint = 300;           //• Distance of Order New (Point)
 
+extern   string            exProfit       = " --------------- Profit --------------- ";   // --------------------------------------------------
+extern   int               exProfit_Tail  =  50;
+extern   int               exProfit_Start =  50;
+extern   int               exProfit_Step  =  10;
 //---
 #include "inc/main.mqh"
 #include "inc/CPort.mqh"
@@ -63,13 +67,30 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
 //+------------------------------------------------------------------+
+struct sPortHold {
+   int OP;
+   int Cnt;
+   double   Value;
+
+   bool     PortIsHave_TP;
+   double   PortSL_Price;
+};
+sPortHold   PortHold = {-1, -1, -1, false, -1};
+//
+struct sTP_MM {
+   double   Tail_Price;
+   void  Clear()
+   {
+      Tail_Price = -1;
+   }
+};
+sTP_MM TP_MM = {-1};
+//+-----------------,-------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 void OnTick()
 {
    Port.Calculator();
-
-   //---
-
-   int Hold_OP = -1, Hold_Cnt = -1;
 
    //---
 
@@ -88,31 +109,75 @@ void OnTick()
       } else {
 
          if(Port.cnt_Buy > 0) {
-            Hold_OP  = OP_BUY;
-            Hold_Cnt = Port.cnt_Buy;
+            PortHold.OP             = OP_BUY;
+            PortHold.Cnt            = Port.cnt_Buy;
+            PortHold.Value          = Port.sumHold_Buy;
+
+            PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Buy.IsResult;
+            PortHold.PortSL_Price   = Port.PortIsHaveTP_Buy.Price;
+
          }
          if(Port.cnt_Sel > 0) {
-            Hold_OP  = OP_SELL;
-            Hold_Cnt = Port.cnt_Sel;
+            PortHold.OP             = OP_SELL;
+            PortHold.Cnt            = Port.cnt_Sel;
+            PortHold.Value          = Port.sumHold_Sel;
+
+            PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Sell.IsResult;
+            PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
+
          }
          //
-         if(Hold_OP != -1) {
+         if(PortHold.OP != -1) {
             /* Detect Distance */
 
-            bool  IsDetectDistance = Port.Point_Distance >= exOrder_InDistancePoint;
+            if(PortHold.Value < 0) {
+               //--- Port Negtive
+               bool  IsDetectDistance = Port.Point_Distance >= exOrder_InDistancePoint;
 
-            if(IsDetectDistance) {
+               if(IsDetectDistance) {
 
-               OrderSend_Active(Hold_OP, Hold_Cnt);
+                  OrderSend_Active(PortHold.OP, PortHold.Cnt);
+
+               }
 
             } else {
+               //--- Port Positive
+
+               /* ##Thongeak ##TPtailing */
 
                /* Detect TakeProfit */
 
                /* if Order Avg is + action same SL by Start Sl Price at Cap Price
                   Funtion Modufy Group
                */
-               Fixme .pls Detect TakeProfit
+               if(PortHold.PortIsHave_TP) {
+
+                  if(PortHold.OP == OP_BUY) {
+
+                     int   Distance = int((Bid - PortHold.PortSL_Price) / Point); //Buy
+
+                     if(Distance >= exProfit_Tail + exProfit_Step) {
+                        //--- >> Order Modify Group
+                     }
+
+                  }
+                  if(PortHold.OP == OP_SELL) {
+
+                     int   Distance = int((PortHold.PortSL_Price - Ask) / Point); //Buy
+
+                     if(Distance >= exProfit_Tail + exProfit_Step) {
+                        //--- >> Order Modify Group
+                     }
+
+                  }
+
+               } else {
+
+               }
+
+
+               //------
+
             }
          }
 
@@ -125,7 +190,9 @@ void OnTick()
    C += "cnt_Sel" + ":" + Port.cnt_Sel + "\n";
    C += "\n";
 
-   C += "EventBreak_R" + ":" + Hold_OP + "\n";
+   C += "PortHold.OP" + ":" + PortHold.OP + "\n";
+   C += "PortHold.Cnt" + ":" + PortHold.Cnt + "\n";
+   C += "PortHold.Value" + ":" + PortHold.Value + "\n";
 
    C += "EventBreak_R" + ":" + Chart.EventBreak_R + "\n";
    C += "EventBreak_A" + ":" + Chart.EventBreak_A + "\n";
