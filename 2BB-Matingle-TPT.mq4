@@ -66,6 +66,10 @@ extern   int               exProfit_Step  =  25;   //• Step (Point)
 #include "inc/CPort.mqh"
 
 //+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool  eaOrder_InsertMode   =  true;   //false: Old (All tick)
+//+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
@@ -129,29 +133,7 @@ sTP_MM TP_MM = {-1};
 void OnTick()
 {
    Port.Calculator();
-
-//---
-
-   if(IsNewBar()) {
-
-      if(Port.cnt_All == 0) {
-
-         BBand_EventBreak();
-         Print(__FUNCSIG__, __LINE__, "#");
-
-         if(Chart.EventBreak_R != -1
-            && ProduckLock.Checker()                    //--- << ** ProduckLock
-           ) {
-
-            /* SendOrder */
-            OrderSend_Active(Chart.EventBreak_R, 0);
-
-         }
-
-      }
-
-   } else {
-
+   {
       PortHold.Clear();
 
       if(Port.cnt_Buy > 0) {
@@ -172,6 +154,55 @@ void OnTick()
          PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
 
       }
+   }
+//---
+
+   if(IsNewBar()) {
+
+      if(Port.cnt_All == 0) {
+
+         BBand_EventBreak();
+         Print(__FUNCSIG__, __LINE__, "#");
+
+         if(Chart.EventBreak_R != -1
+            && ProduckLock.Checker()                    //--- << ** ProduckLock
+           ) {
+
+            /* SendOrder */
+            OrderSend_Active(Chart.EventBreak_R, 0);
+
+         }
+
+      } else {
+         //---    feature/feature_OrderInsert-UseLowHigh
+         if(eaOrder_InsertMode) {
+
+            if(PortHold.OP != -1 && PortHold.Value < 0) {
+
+               int   Point_Distance = -1;
+
+               if(PortHold.OP == OP_BUY) {
+                  Point_Distance = int((iLow(NULL, exBB_TF, 1) - Port.ActivePlace_BOT) / Point); //Buy : Low -  Bot
+               } else {
+                  Point_Distance = int((Port.ActivePlace_TOP - iHigh(NULL, exBB_TF, 1)) / Point); //Sell : Top - High
+               }
+
+               bool  IsDetectDistance =  Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
+               if(IsDetectDistance) {
+
+                  if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
+                     OrderModifys_SL(PortHold.OP);
+                  }
+
+               }
+               
+            }
+
+         }
+      }
+
+   } else {
+
       //
       if(PortHold.OP != -1) {
          /* Detect Distance */
@@ -179,18 +210,20 @@ void OnTick()
 
          if(PortHold.Value < 0) {
             //--- Port Negtive
-            Print(__FUNCSIG__, __LINE__, "# ", "Port Negtive");
+            if(!eaOrder_InsertMode) {
+               Print(__FUNCSIG__, __LINE__, "# ", "Port Negtive");
 
-            bool  IsDetectDistance = Port.Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
+               bool  IsDetectDistance = Port.Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
 
-            if(IsDetectDistance) {
+               if(IsDetectDistance) {
 
-               if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
-                  OrderModifys_SL(PortHold.OP);
+                  if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
+                     OrderModifys_SL(PortHold.OP);
+                  }
+
                }
-
             }
-
+            //---
          } else {
             //--- Port Positive
             Print(__FUNCSIG__, __LINE__, "# ", "Port Positive");
