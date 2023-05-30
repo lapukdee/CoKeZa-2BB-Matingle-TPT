@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.20"
+#define     ea_version     "1.21e"
 #property   version        ea_version
 
 #property strict
@@ -59,13 +59,13 @@ extern   int               exOrder_InDistancePoint = 300;   //• Distance of Or
 
 extern   string            exProfit             = " --------------- Profit --------------- ";   // --------------------------------------------------
 
-extern   bool              exProfit_TP          = true;   // --------------- TP ---------------
-extern   int               exProfit_TP_Point    = 150;  //• Order TP (Point)
+extern   bool              exProfit_TP          = true;     // --------------- TP ---------------
+extern   int               exProfit_TP_Point    = 300;      //• Order TP (Point)
 
-extern   bool              exProfit_Tail        = true;   // --------------- Tailing ---------------
-extern   int               exProfit_Tail_Point  = 150;  //• Tailing (Point)
-extern   int               exProfit_Tail_Start  = 200;  //• Start (Point)
-extern   int               exProfit_Tail_Step   = 25;   //• Step (Point)
+extern   bool              exProfit_Tail        = true;     // --------------- Tailing ---------------
+extern   int               exProfit_Tail_Point  = 250;      //• Tailing (Point)
+extern   int               exProfit_Tail_Start  = 200;      //• Start (Point)
+extern   int               exProfit_Tail_Step   = 75;       //• Step (Point)
 
 //---
 #include "inc/main.mqh"
@@ -75,11 +75,21 @@ extern   int               exProfit_Tail_Step   = 25;   //• Step (Point)
 //|                                                                  |
 //+------------------------------------------------------------------+
 bool  eaOrder_InsertMode   =  true;   //false: Old (All tick)
+bool  eaIsTP_DivByCnt      =  true;
+
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
 int OnInit()
 {
+   {
+      if(exProfit_TP_Point <= exProfit_Tail_Start) {
+         ExpertRemove();
+      }
+      //if(exProfit_Tail_Point <= exProfit_Tail_Start) {
+      //   ExpertRemove();
+      //}
+   }
 //---
    {
       ChartSetInteger(0, CHART_SHOW_GRID, false);
@@ -136,30 +146,37 @@ sTP_MM TP_MM = {-1};
 //+-----------------,-------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+void  Hold_Mapping()
+{
+   PortHold.Clear();
+
+   if(Port.cnt_Buy > 0) {
+      PortHold.OP             = OP_BUY;
+      PortHold.Cnt            = Port.cnt_Buy;
+      PortHold.Value          = Port.sumHold_Buy;
+
+      PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Buy.IsResult;
+      PortHold.PortSL_Price   = Port.PortIsHaveTP_Buy.Price;
+
+   }
+   if(Port.cnt_Sel > 0) {
+      PortHold.OP             = OP_SELL;
+      PortHold.Cnt            = Port.cnt_Sel;
+      PortHold.Value          = Port.sumHold_Sel;
+
+      PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Sell.IsResult;
+      PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
+
+   }
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 void OnTick()
 {
    Port.Calculator();
    {
-      PortHold.Clear();
-
-      if(Port.cnt_Buy > 0) {
-         PortHold.OP             = OP_BUY;
-         PortHold.Cnt            = Port.cnt_Buy;
-         PortHold.Value          = Port.sumHold_Buy;
-
-         PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Buy.IsResult;
-         PortHold.PortSL_Price   = Port.PortIsHaveTP_Buy.Price;
-
-      }
-      if(Port.cnt_Sel > 0) {
-         PortHold.OP             = OP_SELL;
-         PortHold.Cnt            = Port.cnt_Sel;
-         PortHold.Value          = Port.sumHold_Sel;
-
-         PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Sell.IsResult;
-         PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
-
-      }
+      Hold_Mapping();
    }
 //---
 
@@ -170,16 +187,19 @@ void OnTick()
          BBand_EventBreak();
          Print(__FUNCSIG__, __LINE__, "#");
 
+         bool  Checker = ProduckLock.Checker();
+         Print(__FUNCSIG__, __LINE__, "# Checker: ", Checker);
+
          if(Chart.EventBreak_R != -1
-            && ProduckLock.Checker()                    //--- << ** ProduckLock
+            && Checker                    //--- << ** ProduckLock
            ) {
 
             /* SendOrder */
             if(OrderSend_Active(Chart.EventBreak_R, 0)) {
                Port.Calculator();
-               
+
                //Fiexd TP Point
-               OrderModifys_Profit(Chart.EventBreak_R);
+               OrderModifys_Profit(Chart.EventBreak_R, 1);
 
             }
 
@@ -204,15 +224,18 @@ void OnTick()
 
                   if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
                      Port.Calculator();
-
+                     {
+                        Hold_Mapping();
+                     }
+                     {
+                        // Fiexd TP Point
+                        OrderModifys_Profit(PortHold.OP, PortHold.Cnt);
+                     }
                      {
                         OrderModifys_SL(PortHold.OP);
                      }
                      //---
-                     {
-                        // Fiexd TP Point
-                        OrderModifys_Profit(PortHold.OP);
-                     }
+
 
                   }
 
@@ -250,7 +273,7 @@ void OnTick()
             if(exProfit_Tail) {
 
                //--- Port Positive
-               Print(__FUNCSIG__, __LINE__, "# ", "Port Positive");
+               //Print(__FUNCSIG__, __LINE__, "# ", "Port Positive");
 
                /* ##Thongeak ##TPtailing */
 
@@ -259,24 +282,24 @@ void OnTick()
                /* if Order Avg is + action same SL by Start Sl Price at Cap Price
                   Funtion Modufy Group
                */
-               Print(__FUNCSIG__, __LINE__, "# ", "PortHold.PortIsHave_TP: ", PortHold.PortIsHave_TP);
+               //Print(__FUNCSIG__, __LINE__, "# ", "PortHold.PortIsHave_TP: ", PortHold.PortIsHave_TP);
 
                if(PortHold.PortIsHave_TP) {
                   int   Distance = -1;
-                  Print(__FUNCSIG__, __LINE__, "# ", "PortHold.OP: ", PortHold.OP);
+                  //Print(__FUNCSIG__, __LINE__, "# ", "PortHold.OP: ", PortHold.OP);
                   if(PortHold.OP == OP_BUY) {
 
                      Distance = int((Bid - PortHold.PortSL_Price) / Point); //Buy
-                     Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
+                     //Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                   }
                   if(PortHold.OP == OP_SELL) {
 
                      Distance = int((PortHold.PortSL_Price - Ask) / Point); //Buy
-                     Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
+                     //Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                   }
 
                   int   Distance_Test  =  ( PortHold.Cnt  == 1) ? exProfit_Tail_Start : exProfit_Tail_Point + exProfit_Tail_Step;
-                  Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
+                  //Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
 
                   if(Distance >= Distance_Test) {
                      //--- >> Order Modify Group
