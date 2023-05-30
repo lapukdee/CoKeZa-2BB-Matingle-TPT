@@ -79,15 +79,15 @@ int   BBand_EventBreak()
 
       {
          {
-            bool IsStand_A = __Open < BBand_A[0][MODE_UPPER] && __Open > BBand_A[0][MODE_LOWER];
+            bool IsStand_A = true;
 
             if(IsStand_A) {
                Print(__LINE__, "# ");
-               if(_Close > BBand_A[0][MODE_UPPER]) {
+               if(_Close > BBand_A[0][MODE_UPPER] && __Open > BBand_A[0][MODE_MAIN]) {
                   Chart.EventBreak_A = OP_SELL;
                   Print(__LINE__, "# ");
                }
-               if(_Close < BBand_A[0][MODE_LOWER]) {
+               if(_Close < BBand_A[0][MODE_LOWER] && __Open < BBand_A[0][MODE_MAIN]) {
                   Chart.EventBreak_A = OP_BUY;
                   Print(__LINE__, "# ");
                }
@@ -139,7 +139,7 @@ bool              IsNewBar()
          cIsNewBar_Save = getBar;
          return   false;
       }
-   
+
       cIsNewBar_Save = getBar;
       if(cIsNewBar_Save != -1)
          return   true;
@@ -147,5 +147,63 @@ bool              IsNewBar()
    }
 
    return   false;
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool  OrderModifys_Profit(int  OP)
+{
+   if(!exProfit_TP) {
+      return   exProfit_TP;
+   }
+   Print(__FUNCSIG__, __LINE__, "# ", "OP: ", OP);
+
+   double   __TP_New = -1;
+   double   _Profit_TP_Point = exProfit_TP_Point * Point;
+   if(OP == OP_BUY) {
+      __TP_New   = NormalizeDouble(Port.sumProd_Buy + _Profit_TP_Point, Digits);
+
+      if(Port.sumProd_Buy > __TP_New) {
+         return   false;
+      }
+   } else {
+      __TP_New   = NormalizeDouble(Port.sumProd_Sel - _Profit_TP_Point, Digits);
+
+      if(Port.sumProd_Sel < __TP_New) {
+         return   false;
+      }
+   }
+   
+   Print(__FUNCSIG__, __LINE__, "# ", "__TP_New: ", __TP_New);
+   Draw_HLine(OP_BUY, __TP_New, clrLime, "__TP_New");
+   //---
+
+   int   __OrdersTotal   =  OrdersTotal();
+   for(int icnt = 0; icnt < __OrdersTotal; icnt++) {
+
+      if(OrderSelect(icnt, SELECT_BY_POS, MODE_TRADES) &&
+         OrderSymbol() == Symbol() &&
+         OrderMagicNumber() == exMagicnumber &&
+         OrderType() == OP) {
+
+         double   OrderTakeProfit_ = OrderTakeProfit();
+
+         if(OrderTakeProfit_ != __TP_New) {
+
+            int      OrderTicket_   = OrderTicket();
+            double   OrderStopLoss_ = OrderStopLoss();
+
+            bool res = OrderModify(OrderTicket_, OrderOpenPrice(), OrderStopLoss_, __TP_New, 0);
+            if(!res) {
+               Print(__FUNCSIG__, __LINE__, "#" + "@", OrderTicket_, " Error in OrderModify. Error code=", GetLastError());
+               return   false;
+            } else
+               Print(__FUNCSIG__, __LINE__, "#" + "@", OrderTicket_, " Order modified successfully.");
+         }
+
+      }
+   }
+
+   return   true;
 }
 //+------------------------------------------------------------------+

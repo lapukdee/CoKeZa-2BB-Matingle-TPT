@@ -20,13 +20,13 @@ public:
    int                  ActivePoint_TOP, ActivePoint_BOT;
    //---
 
-                     CPort(void)
+   CPort(void)
    {
       Init();
 
       //SymbolInfoDouble
    };
-                    ~CPort(void) {};
+   ~CPort(void) {};
    void              Init()
    {
       cnt_Buy  =  0;
@@ -208,16 +208,26 @@ public:
                Draw_SumProduct(5, ActivePlace_TOP, clrYellow, "_ActivePlace_TOP");
                Draw_SumProduct(5, ActivePlace_BOT, clrYellow, "_ActivePlace_BOT");
 
+
+               double   RimInsert = (exOrder_InDistancePoint_Get () * Point) * -1;
+
                if(cnt_Sel > 0) {
                   Point_Distance = ActivePoint_TOP;
+
+                  Draw_SumProduct(5, ActivePlace_TOP + RimInsert, clrMidnightBlue, "_ActivePlace_TOP_RimInsert");
                }
                if(cnt_Buy > 0) {
                   Point_Distance = ActivePoint_BOT;
+
+                  Draw_SumProduct(5, ActivePlace_BOT - RimInsert, clrMidnightBlue, "_ActivePlace_BOT_RimInsert");
                }
 
             } else {
                Draw_SumProduct(5, 0, clrYellow, "_ActivePlace_TOP");
                Draw_SumProduct(5, 0, clrYellow, "_ActivePlace_BOT");
+
+               Draw_SumProduct(5, 0, clrYellow, "_ActivePlace_TOP_RimInsert");
+               Draw_SumProduct(5, 0, clrYellow, "_ActivePlace_BOT_RimInsert");
             }
          }
 
@@ -284,11 +294,15 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
 
    Print(__LINE__, "# Order_Lots: ", Order_Lots);
 
-
    int ticket = OrderSend(Symbol(), OP_Commander, Order_Lots, PricePlace, 3, 0, 0,
                           EA_Identity_Short + "[" + string(CountOfHold) + "]",
                           exMagicnumber);
 
+   if(ticket < 0) {
+      Print("OrderSend failed with error #", GetLastError());
+      return   false;
+   } else
+      Print("OrderSend placed successfully");
    return   true;
 }
 //+------------------------------------------------------------------+
@@ -296,24 +310,29 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
 //+------------------------------------------------------------------+
 bool  OrderModifys_SL(int  OP)
 {
+   if(!exProfit_Tail) {
+      return   exProfit_Tail;
+   }
+
    Print(__FUNCSIG__, __LINE__, "# ", "OP: ", OP);
 
    double   __SL_New = -1;
    if(OP == OP_BUY) {
-      __SL_New   = NormalizeDouble(Bid - (exProfit_Tail * Point), Digits);
+      __SL_New   = NormalizeDouble(Bid - (exProfit_Tail_Point * Point), Digits);
 
       if(Port.sumProd_Buy > __SL_New) {
          return   false;
       }
       Draw_HLine(OP_BUY, Bid, clrWhite, "SL_New*Bid");
    } else {
-      __SL_New   = NormalizeDouble(Ask + (exProfit_Tail * Point), Digits);
+      __SL_New   = NormalizeDouble(Ask + (exProfit_Tail_Point * Point), Digits);
 
       if(Port.sumProd_Sel < __SL_New) {
          return   false;
       }
       Draw_HLine(OP_SELL, Ask, clrWhite, "SL_New*Ask");
    }
+   //---
 
    int   __OrdersTotal   =  OrdersTotal();
    for(int icnt = 0; icnt < __OrdersTotal; icnt++) {
@@ -327,9 +346,9 @@ bool  OrderModifys_SL(int  OP)
 
          if(OrderStopLoss_ != __SL_New) {
 
-            int   OrderTicket_   = OrderTicket();
-
-            bool res = OrderModify(OrderTicket_, OrderOpenPrice(), __SL_New, 0, 0);
+            int      OrderTicket_      = OrderTicket();
+            double   OrderTakeProfit_  = OrderTakeProfit();
+            bool res = OrderModify(OrderTicket_, OrderOpenPrice(), __SL_New, OrderTakeProfit_, 0);
             if(!res) {
                Print(__FUNCSIG__, __LINE__, "#" + "@", OrderTicket_, " Error in OrderModify. Error code=", GetLastError());
                return   false;
@@ -344,7 +363,7 @@ bool  OrderModifys_SL(int  OP)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int   exOrder_InDistancePoint_Get(int  OrederCNT)
+int   exOrder_InDistancePoint_Get(int  OrederCNT = 0)
 {
    double   res   = exOrder_InDistancePoint;// * MathPow(1.15, OrederCNT);
    return   int(res * -1);
