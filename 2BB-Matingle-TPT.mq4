@@ -8,7 +8,7 @@
    ""                      => Account not locked
 
 */
-#define     eaLOCK_Date    ""
+#define     eaLOCK_Date    "10.6.2023"
 /*
    - Compared to the center time +0
    #Example.
@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.22e"
+#define     ea_version     "1.22"
 #property   version        ea_version
 
 #property strict
@@ -74,11 +74,11 @@ extern   int               exProfit_Tail_Step   = 75;       //• Step (Point)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-extern   bool  eaOrder_InsertMode   =  true;   ///• eaOrder_InsertMode  #true  |  false: Old (All tick)
-extern   bool  eaIsTP_DivByCnt      =  true;    //• eaIsTP_DivByCnt  #false
+bool  eaOrder_InsertMode   =  true;   ///• eaOrder_InsertMode  #true  |  false: Old (All tick)
+bool  eaIsTP_DivByCnt      =  false;    //• eaIsTP_DivByCnt  #false
 
-extern   bool  eaOrder_LotStartByBalance  =  true; //• eaOrder_LotStartByBalance  #false
-extern   double               eaCapital   =  50;   //• eaCapital
+bool  eaOrder_LotStartByBalance  =  false; //• eaOrder_LotStartByBalance  #false
+double               eaCapital   =  50;   //• eaCapital
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
