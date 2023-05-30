@@ -176,8 +176,11 @@ void OnTick()
 
             /* SendOrder */
             if(OrderSend_Active(Chart.EventBreak_R, 0)) {
+               Port.Calculator();
+               
                //Fiexd TP Point
                OrderModifys_Profit(Chart.EventBreak_R);
+
             }
 
          }
@@ -200,6 +203,7 @@ void OnTick()
                if(IsDetectDistance) {
 
                   if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
+                     Port.Calculator();
 
                      {
                         OrderModifys_SL(PortHold.OP);

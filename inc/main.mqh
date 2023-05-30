@@ -173,7 +173,8 @@ bool  OrderModifys_Profit(int  OP)
          return   false;
       }
    }
-
+   
+   Print(__FUNCSIG__, __LINE__, "# ", "__TP_New: ", __TP_New);
    Draw_HLine(OP_BUY, __TP_New, clrLime, "__TP_New");
    //---
 
@@ -191,7 +192,7 @@ bool  OrderModifys_Profit(int  OP)
 
             int      OrderTicket_   = OrderTicket();
             double   OrderStopLoss_ = OrderStopLoss();
-            
+
             bool res = OrderModify(OrderTicket_, OrderOpenPrice(), OrderStopLoss_, __TP_New, 0);
             if(!res) {
                Print(__FUNCSIG__, __LINE__, "#" + "@", OrderTicket_, " Error in OrderModify. Error code=", GetLastError());

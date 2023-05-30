@@ -297,7 +297,7 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
    int ticket = OrderSend(Symbol(), OP_Commander, Order_Lots, PricePlace, 3, 0, 0,
                           EA_Identity_Short + "[" + string(CountOfHold) + "]",
                           exMagicnumber);
-                          
+
    if(ticket < 0) {
       Print("OrderSend failed with error #", GetLastError());
       return   false;
@@ -333,7 +333,7 @@ bool  OrderModifys_SL(int  OP)
       Draw_HLine(OP_SELL, Ask, clrWhite, "SL_New*Ask");
    }
    //---
-   
+
    int   __OrdersTotal   =  OrdersTotal();
    for(int icnt = 0; icnt < __OrdersTotal; icnt++) {
 
@@ -346,9 +346,9 @@ bool  OrderModifys_SL(int  OP)
 
          if(OrderStopLoss_ != __SL_New) {
 
-            int   OrderTicket_   = OrderTicket();
-
-            bool res = OrderModify(OrderTicket_, OrderOpenPrice(), __SL_New, 0, 0);
+            int      OrderTicket_      = OrderTicket();
+            double   OrderTakeProfit_  = OrderTakeProfit();
+            bool res = OrderModify(OrderTicket_, OrderOpenPrice(), __SL_New, OrderTakeProfit_, 0);
             if(!res) {
                Print(__FUNCSIG__, __LINE__, "#" + "@", OrderTicket_, " Error in OrderModify. Error code=", GetLastError());
                return   false;
