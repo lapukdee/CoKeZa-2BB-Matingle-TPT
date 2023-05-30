@@ -289,7 +289,7 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
 
    double   PricePlace = (OP_Commander == OP_BUY) ? Ask : Bid;
 
-   double   Order_Lots = exOrder_LotStart * (MathPow(exOrder_LotMulti, CountOfHold));
+   double   Order_Lots = getOrder_LotStart() * (MathPow(exOrder_LotMulti, CountOfHold));
    Order_Lots = NormalizeDouble(Order_Lots, 2);
 
    Print(__LINE__, "# Order_Lots: ", Order_Lots);
@@ -304,6 +304,20 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
    } else
       Print("OrderSend placed successfully");
    return   true;
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+double   getOrder_LotStart()
+{
+   if(!eaOrder_LotStartByBalance) {
+      return NormalizeDouble(exOrder_LotStart, 2);
+   }
+
+   double   rate  =  AccountInfoDouble(ACCOUNT_BALANCE) / eaCapital;
+   rate = rate - MathMod(rate, 1);
+
+   return NormalizeDouble(exOrder_LotStart * rate, 2);
 }
 //+------------------------------------------------------------------+
 //|                                                                  |
