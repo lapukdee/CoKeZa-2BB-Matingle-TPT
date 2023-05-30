@@ -57,11 +57,16 @@ extern   double            exOrder_LotStart        = 0.01;  //• Lot - Start
 extern   double            exOrder_LotMulti        = 2;     //• Lot - Multi
 extern   int               exOrder_InDistancePoint = 300;   //• Distance of Order New (Point)
 
-extern   string            exProfit       = " --------------- Profit --------------- ";   // --------------------------------------------------
-extern   bool              exProfit_Tail  = true;   // --------------- Tailing ---------------
-extern   int               exProfit_Tail_Point  =  150;  //• Tailing (Point)
-extern   int               exProfit_Tail_Start =  200;  //• Start (Point)
-extern   int               exProfit_Tail_Step  =  25;   //• Step (Point)
+extern   string            exProfit             = " --------------- Profit --------------- ";   // --------------------------------------------------
+
+extern   bool              exProfit_TP          = true;   // --------------- TP ---------------
+extern   int               exProfit_TP_Point    = 150;  //• Order TP (Point)
+
+extern   bool              exProfit_Tail        = true;   // --------------- Tailing ---------------
+extern   int               exProfit_Tail_Point  = 150;  //• Tailing (Point)
+extern   int               exProfit_Tail_Start  = 200;  //• Start (Point)
+extern   int               exProfit_Tail_Step   = 25;   //• Step (Point)
+
 //---
 #include "inc/main.mqh"
 #include "inc/CPort.mqh"
@@ -170,7 +175,10 @@ void OnTick()
            ) {
 
             /* SendOrder */
-            OrderSend_Active(Chart.EventBreak_R, 0);
+            if(OrderSend_Active(Chart.EventBreak_R, 0)) {
+               //Fiexd TP Point
+               OrderModifys_Profit(Chart.EventBreak_R);
+            }
 
          }
 
@@ -192,7 +200,16 @@ void OnTick()
                if(IsDetectDistance) {
 
                   if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
-                     OrderModifys_SL(PortHold.OP);
+
+                     {
+                        OrderModifys_SL(PortHold.OP);
+                     }
+                     //---
+                     {
+                        // Fiexd TP Point
+                        OrderModifys_Profit(PortHold.OP);
+                     }
+
                   }
 
                }
@@ -207,7 +224,7 @@ void OnTick()
       //
       if(PortHold.OP != -1) {
          /* Detect Distance */
-         Print(__FUNCSIG__, __LINE__, "#");
+         //Print(__FUNCSIG__, __LINE__, "#");
 
          if(PortHold.Value < 0) {
             //--- Port Negtive

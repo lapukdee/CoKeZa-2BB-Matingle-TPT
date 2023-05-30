@@ -297,7 +297,12 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
    int ticket = OrderSend(Symbol(), OP_Commander, Order_Lots, PricePlace, 3, 0, 0,
                           EA_Identity_Short + "[" + string(CountOfHold) + "]",
                           exMagicnumber);
-
+                          
+   if(ticket < 0) {
+      Print("OrderSend failed with error #", GetLastError());
+      return   false;
+   } else
+      Print("OrderSend placed successfully");
    return   true;
 }
 //+------------------------------------------------------------------+
@@ -308,7 +313,7 @@ bool  OrderModifys_SL(int  OP)
    if(!exProfit_Tail) {
       return   exProfit_Tail;
    }
-   
+
    Print(__FUNCSIG__, __LINE__, "# ", "OP: ", OP);
 
    double   __SL_New = -1;
@@ -327,7 +332,8 @@ bool  OrderModifys_SL(int  OP)
       }
       Draw_HLine(OP_SELL, Ask, clrWhite, "SL_New*Ask");
    }
-
+   //---
+   
    int   __OrdersTotal   =  OrdersTotal();
    for(int icnt = 0; icnt < __OrdersTotal; icnt++) {
 
