@@ -83,11 +83,11 @@ int   BBand_EventBreak()
 
             if(IsStand_A) {
                Print(__LINE__, "# ");
-               if(_Close > BBand_A[0][MODE_UPPER] && __Open > BBand_A[0][MODE_MAIN]) {
+               if(_Close > BBand_A[0][MODE_MAIN] /*&& __Open > BBand_A[0][MODE_MAIN]*/) {
                   Chart.EventBreak_A = OP_SELL;
                   Print(__LINE__, "# ");
                }
-               if(_Close < BBand_A[0][MODE_LOWER] && __Open < BBand_A[0][MODE_MAIN]) {
+               if(_Close < BBand_A[0][MODE_MAIN] /*&& __Open < BBand_A[0][MODE_MAIN]*/) {
                   Chart.EventBreak_A = OP_BUY;
                   Print(__LINE__, "# ");
                }
@@ -95,15 +95,15 @@ int   BBand_EventBreak()
             Print(__LINE__, "# ", "Chart.EventBreak_A:* ",  Chart.EventBreak_A);
          }
          {
-            bool IsStand_B = __Open < BBand_B[0][MODE_UPPER] && __Open > BBand_B[0][MODE_LOWER];
+            bool IsStand_B = true;
 
             if(IsStand_B) {
                Print(__LINE__, "# ");
-               if(_Close > BBand_B[0][MODE_UPPER]) {
+               if(_Close > BBand_B[0][MODE_MAIN] /*&& __Open > BBand_B[0][MODE_MAIN]*/) {
                   Chart.EventBreak_B = OP_SELL;
                   Print(__LINE__, "# ");
                }
-               if(_Close < BBand_B[0][MODE_LOWER]) {
+               if(_Close < BBand_B[0][MODE_MAIN] /*&& __Open < BBand_B[0][MODE_MAIN]*/) {
                   Chart.EventBreak_B = OP_BUY;
                   Print(__LINE__, "# ");
                }
@@ -151,15 +151,33 @@ bool              IsNewBar()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool  OrderModifys_Profit(int  OP)
+bool  OrderModifys_Profit(int  OP, int  cnt)
 {
    if(!exProfit_TP) {
       return   exProfit_TP;
    }
    Print(__FUNCSIG__, __LINE__, "# ", "OP: ", OP);
-
+   Print(__FUNCSIG__, __LINE__, "# ", "cnt: ", cnt);
    double   __TP_New = -1;
-   double   _Profit_TP_Point = exProfit_TP_Point * Point;
+
+   double   _Profit_TP_Point = double(exProfit_TP_Point);
+   if(eaIsTP_DivByCnt) {
+      double   Rate = 0.5;
+      double   Div = MathPow(Rate, cnt - 1);
+      _Profit_TP_Point = double(exProfit_TP_Point) * Div;
+   }
+
+   Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point: ", NormalizeDouble(_Profit_TP_Point, 0));
+   {
+      if(_Profit_TP_Point <= 0) {
+         _Profit_TP_Point = 1;
+         Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point <= 0: ", _Profit_TP_Point);
+      }
+      _Profit_TP_Point = _Profit_TP_Point * Point;
+
+   }
+
+
    if(OP == OP_BUY) {
       __TP_New   = NormalizeDouble(Port.sumProd_Buy + _Profit_TP_Point, Digits);
 
@@ -173,7 +191,7 @@ bool  OrderModifys_Profit(int  OP)
          return   false;
       }
    }
-   
+
    Print(__FUNCSIG__, __LINE__, "# ", "__TP_New: ", __TP_New);
    Draw_HLine(OP_BUY, __TP_New, clrLime, "__TP_New");
    //---
