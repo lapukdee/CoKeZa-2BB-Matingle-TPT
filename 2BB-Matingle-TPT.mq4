@@ -57,10 +57,16 @@ extern   double            exOrder_LotStart        = 0.01;  //• Lot - Start
 extern   double            exOrder_LotMulti        = 2;     //• Lot - Multi
 extern   int               exOrder_InDistancePoint = 300;   //• Distance of Order New (Point)
 
-extern   string            exProfit       = " --------------- Profit --------------- ";   // --------------------------------------------------
-extern   int               exProfit_Tail  =  150;  //• Tailing (Point)
-extern   int               exProfit_Start =  200;  //• Start (Point)
-extern   int               exProfit_Step  =  25;   //• Step (Point)
+extern   string            exProfit             = " --------------- Profit --------------- ";   // --------------------------------------------------
+
+extern   bool              exProfit_TP          = true;   // --------------- TP ---------------
+extern   int               exProfit_TP_Point    = 150;  //• Order TP (Point)
+
+extern   bool              exProfit_Tail        = true;   // --------------- Tailing ---------------
+extern   int               exProfit_Tail_Point  = 150;  //• Tailing (Point)
+extern   int               exProfit_Tail_Start  = 200;  //• Start (Point)
+extern   int               exProfit_Tail_Step   = 25;   //• Step (Point)
+
 //---
 #include "inc/main.mqh"
 #include "inc/CPort.mqh"
@@ -169,7 +175,13 @@ void OnTick()
            ) {
 
             /* SendOrder */
-            OrderSend_Active(Chart.EventBreak_R, 0);
+            if(OrderSend_Active(Chart.EventBreak_R, 0)) {
+               Port.Calculator();
+               
+               //Fiexd TP Point
+               OrderModifys_Profit(Chart.EventBreak_R);
+
+            }
 
          }
 
@@ -191,11 +203,21 @@ void OnTick()
                if(IsDetectDistance) {
 
                   if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
-                     OrderModifys_SL(PortHold.OP);
+                     Port.Calculator();
+
+                     {
+                        OrderModifys_SL(PortHold.OP);
+                     }
+                     //---
+                     {
+                        // Fiexd TP Point
+                        OrderModifys_Profit(PortHold.OP);
+                     }
+
                   }
 
                }
-               
+
             }
 
          }
@@ -206,7 +228,7 @@ void OnTick()
       //
       if(PortHold.OP != -1) {
          /* Detect Distance */
-         Print(__FUNCSIG__, __LINE__, "#");
+         //Print(__FUNCSIG__, __LINE__, "#");
 
          if(PortHold.Value < 0) {
             //--- Port Negtive
@@ -225,46 +247,47 @@ void OnTick()
             }
             //---
          } else {
-            //--- Port Positive
-            Print(__FUNCSIG__, __LINE__, "# ", "Port Positive");
+            if(exProfit_Tail) {
 
-            /* ##Thongeak ##TPtailing */
+               //--- Port Positive
+               Print(__FUNCSIG__, __LINE__, "# ", "Port Positive");
 
-            /* Detect TakeProfit */
+               /* ##Thongeak ##TPtailing */
 
-            /* if Order Avg is + action same SL by Start Sl Price at Cap Price
-               Funtion Modufy Group
-            */
-            Print(__FUNCSIG__, __LINE__, "# ", "PortHold.PortIsHave_TP: ", PortHold.PortIsHave_TP);
+               /* Detect TakeProfit */
 
-            if(PortHold.PortIsHave_TP) {
-               int   Distance = -1;
-               Print(__FUNCSIG__, __LINE__, "# ", "PortHold.OP: ", PortHold.OP);
-               if(PortHold.OP == OP_BUY) {
+               /* if Order Avg is + action same SL by Start Sl Price at Cap Price
+                  Funtion Modufy Group
+               */
+               Print(__FUNCSIG__, __LINE__, "# ", "PortHold.PortIsHave_TP: ", PortHold.PortIsHave_TP);
 
-                  Distance = int((Bid - PortHold.PortSL_Price) / Point); //Buy
-                  Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
-               }
-               if(PortHold.OP == OP_SELL) {
+               if(PortHold.PortIsHave_TP) {
+                  int   Distance = -1;
+                  Print(__FUNCSIG__, __LINE__, "# ", "PortHold.OP: ", PortHold.OP);
+                  if(PortHold.OP == OP_BUY) {
 
-                  Distance = int((PortHold.PortSL_Price - Ask) / Point); //Buy
-                  Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
-               }
-//---
-               int   Distance_Test  =  ( PortHold.Cnt  == 1) ? exProfit_Start : exProfit_Tail + exProfit_Step;
-               Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
+                     Distance = int((Bid - PortHold.PortSL_Price) / Point); //Buy
+                     Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
+                  }
+                  if(PortHold.OP == OP_SELL) {
 
-               if(Distance >= Distance_Test) {
-                  //--- >> Order Modify Group
+                     Distance = int((PortHold.PortSL_Price - Ask) / Point); //Buy
+                     Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
+                  }
+
+                  int   Distance_Test  =  ( PortHold.Cnt  == 1) ? exProfit_Tail_Start : exProfit_Tail_Point + exProfit_Tail_Step;
+                  Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
+
+                  if(Distance >= Distance_Test) {
+                     //--- >> Order Modify Group
+                     OrderModifys_SL(PortHold.OP);
+                  }
+               } else {
                   OrderModifys_SL(PortHold.OP);
                }
-            } else {
-               OrderModifys_SL(PortHold.OP);
             }
 
-
             //------
-
          }
       }
 
