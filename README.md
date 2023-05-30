@@ -13,11 +13,11 @@
 
 @คือเงื่อนไข ออกออเดอร์แรกอยู่ที่ bb 20 กับ 30 อ่ะครับ 
 
-## Req form [Draft-1](https://github.com/lapukdee/CoKeZa-2BB-Matingle-TPT/tree/Release/Draft-1)
+## Req form [Draft-1](https://github.com/lapukdee/CoKeZa-2BB-Matingle-TPT/tree/Release/Draft-1) *v1.20
  - [x] **Entrypoint** ปรับจุดเข้า ใช้ Low
- - [ ] **add** Fiexd TP Add
+ - [x] **add** Fiexd TP Add
  - [x] **On/Off** Tailing TP
- - [ ] **On/Off** Fixed TP
+ - [x] **On/Off** Fixed TP
  - [x] **Entrypoint** Break A B = R | Haft A | Close Price
 
 > Written with [StackEdit](https://stackedit.io/).
