@@ -16,7 +16,7 @@
 ## Req form [Draft-1](https://github.com/lapukdee/CoKeZa-2BB-Matingle-TPT/tree/Release/Draft-1)
  - [x] **Entrypoint** ปรับจุดเข้า ใช้ Low
  - [ ] **add** Fiexd TP Add
- - [ ] **On/Off** Tailing TP
+ - [x] **On/Off** Tailing TP
  - [ ] **On/Off** Fixed TP
  - [x] **Entrypoint** Break A B = R | Haft A | Close Price
 

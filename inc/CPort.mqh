@@ -305,18 +305,22 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
 //+------------------------------------------------------------------+
 bool  OrderModifys_SL(int  OP)
 {
+   if(!exProfit_Tail) {
+      return   exProfit_Tail;
+   }
+   
    Print(__FUNCSIG__, __LINE__, "# ", "OP: ", OP);
 
    double   __SL_New = -1;
    if(OP == OP_BUY) {
-      __SL_New   = NormalizeDouble(Bid - (exProfit_Tail * Point), Digits);
+      __SL_New   = NormalizeDouble(Bid - (exProfit_Tail_Point * Point), Digits);
 
       if(Port.sumProd_Buy > __SL_New) {
          return   false;
       }
       Draw_HLine(OP_BUY, Bid, clrWhite, "SL_New*Bid");
    } else {
-      __SL_New   = NormalizeDouble(Ask + (exProfit_Tail * Point), Digits);
+      __SL_New   = NormalizeDouble(Ask + (exProfit_Tail_Point * Point), Digits);
 
       if(Port.sumProd_Sel < __SL_New) {
          return   false;
