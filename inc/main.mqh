@@ -79,15 +79,15 @@ int   BBand_EventBreak()
 
       {
          {
-            bool IsStand_A = __Open < BBand_A[0][MODE_UPPER] && __Open > BBand_A[0][MODE_LOWER];
+            bool IsStand_A = true;
 
             if(IsStand_A) {
                Print(__LINE__, "# ");
-               if(_Close > BBand_A[0][MODE_UPPER]) {
+               if(_Close > BBand_A[0][MODE_UPPER] && __Open > BBand_A[0][MODE_MAIN]) {
                   Chart.EventBreak_A = OP_SELL;
                   Print(__LINE__, "# ");
                }
-               if(_Close < BBand_A[0][MODE_LOWER]) {
+               if(_Close < BBand_A[0][MODE_LOWER] && __Open < BBand_A[0][MODE_MAIN]) {
                   Chart.EventBreak_A = OP_BUY;
                   Print(__LINE__, "# ");
                }
@@ -139,7 +139,7 @@ bool              IsNewBar()
          cIsNewBar_Save = getBar;
          return   false;
       }
-   
+
       cIsNewBar_Save = getBar;
       if(cIsNewBar_Save != -1)
          return   true;
