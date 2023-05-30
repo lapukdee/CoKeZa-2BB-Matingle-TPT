@@ -8,7 +8,7 @@
    ""                      => Account not locked
 
 */
-#define     eaLOCK_Date    "7.6.2023"
+#define     eaLOCK_Date    ""
 /*
    - Compared to the center time +0
    #Example.
@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.21e"
+#define     ea_version     "1.22e"
 #property   version        ea_version
 
 #property strict
@@ -74,8 +74,11 @@ extern   int               exProfit_Tail_Step   = 75;       //• Step (Point)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool  eaOrder_InsertMode   =  true;   //false: Old (All tick)
-bool  eaIsTP_DivByCnt      =  true;
+extern   bool  eaOrder_InsertMode   =  true;   ///• eaOrder_InsertMode  #true  |  false: Old (All tick)
+extern   bool  eaIsTP_DivByCnt      =  true;    //• eaIsTP_DivByCnt  #false
+
+extern   bool  eaOrder_LotStartByBalance  =  true; //• eaOrder_LotStartByBalance  #false
+extern   double               eaCapital   =  50;   //• eaCapital
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -331,7 +334,7 @@ void OnTick()
 
    C += "Event_R" + ": " + Chart.EventBreak_R + "\n";
    C += "Event_A" + ":  " + Chart.EventBreak_A + "\n";
-   C += "Event_B" + ":" + Chart.EventBreak_B + "\n";
+   C += "Event_B" + ": " + Chart.EventBreak_B + "\n";
    C += "\n";
 
    C += "A.PR.TOP" + ": " + Port.ActivePlace_TOP + "\n";
