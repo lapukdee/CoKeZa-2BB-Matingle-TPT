@@ -15,6 +15,7 @@
 
 ## Req form [Draft-2](https://github.com/lapukdee/CoKeZa-2BB-Matingle-TPT/releases/tag/Release%2Fv1.22) *v1.22
  - [ ] **Entrypoint** whit out check Open
+ - [ ] **Cut Lose and Profit By Percent of Capital **
  
 ## Req form [Draft-1](https://github.com/lapukdee/CoKeZa-2BB-Matingle-TPT/tree/Release/Draft-1) *v1.20
  - [x] **Entrypoint** ปรับจุดเข้า ใช้ Low
