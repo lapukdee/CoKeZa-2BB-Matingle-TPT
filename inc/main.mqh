@@ -49,6 +49,8 @@ bool  BBand_getValue(int vPeriod_)
    return true;
 }
 //+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 int   BBand_EventBreak()
 {
    if(BBand_getValue(exBB_A_Period)) {
@@ -83,11 +85,11 @@ int   BBand_EventBreak()
 
             if(IsStand_A) {
                Print(__LINE__, "# ");
-               if(_Close > BBand_A[0][MODE_MAIN] /*&& __Open > BBand_A[0][MODE_MAIN]*/) {
+               if(_Close > BBand_A[0][MODE_UPPER] && _Close > BBand_A[0][MODE_MAIN]) {
                   Chart.EventBreak_A = OP_SELL;
                   Print(__LINE__, "# ");
                }
-               if(_Close < BBand_A[0][MODE_MAIN] /*&& __Open < BBand_A[0][MODE_MAIN]*/) {
+               if(_Close < BBand_A[0][MODE_LOWER] && _Close < BBand_A[0][MODE_MAIN]) {
                   Chart.EventBreak_A = OP_BUY;
                   Print(__LINE__, "# ");
                }
@@ -99,11 +101,11 @@ int   BBand_EventBreak()
 
             if(IsStand_B) {
                Print(__LINE__, "# ");
-               if(_Close > BBand_B[0][MODE_MAIN] /*&& __Open > BBand_B[0][MODE_MAIN]*/) {
+               if(_Close > BBand_B[0][MODE_UPPER] && _Close > BBand_B[0][MODE_MAIN]) {
                   Chart.EventBreak_B = OP_SELL;
                   Print(__LINE__, "# ");
                }
-               if(_Close < BBand_B[0][MODE_MAIN] /*&& __Open < BBand_B[0][MODE_MAIN]*/) {
+               if(_Close < BBand_B[0][MODE_LOWER] && _Close < BBand_B[0][MODE_MAIN]) {
                   Chart.EventBreak_B = OP_BUY;
                   Print(__LINE__, "# ");
                }
