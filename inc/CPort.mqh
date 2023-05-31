@@ -314,7 +314,7 @@ double   getOrder_LotStart()
       return NormalizeDouble(exOrder_LotStart, 2);
    }
 
-   double   rate  =  AccountInfoDouble(ACCOUNT_BALANCE) / eaCapital;
+   double   rate  =  AccountInfoDouble(ACCOUNT_BALANCE) / exCapitalValue;
    rate = rate - MathMod(rate, 1);
 
    return NormalizeDouble(exOrder_LotStart * rate, 2);
@@ -383,9 +383,6 @@ int   exOrder_InDistancePoint_Get(int  OrederCNT = 0)
    return   int(res * -1);
 }
 //+------------------------------------------------------------------+
-
-
-//+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
 void  Draw_HLine(int OP, double Price, color Clr, string   name = "_SumProduct", bool  IsAdd_IdName = true)
@@ -401,5 +398,43 @@ void  Draw_HLine(int OP, double Price, color Clr, string   name = "_SumProduct",
    }
    ObjectSet(ObjTag, OBJPROP_BACK, false);
    ObjectSet(ObjTag, OBJPROP_COLOR, Clr);
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+bool Order_Close(int OP_DIR)
+{
+   int   ORDER_TICKET_CLOSE[];
+   ArrayResize(ORDER_TICKET_CLOSE, OrdersTotal());
+   ArrayInitialize(ORDER_TICKET_CLOSE, EMPTY_VALUE);
+
+   for(int pos = 0; pos < OrdersTotal(); pos++) {
+      if(
+         (OrderSelect(pos, SELECT_BY_POS)) &&
+         (OrderSymbol() == Symbol()) &&
+         ((OP_DIR != -1 && OrderType() == OP_DIR) || (OP_DIR == -1)) &&
+         (OrderMagicNumber() == exMagicnumber)
+      ) {
+         ORDER_TICKET_CLOSE[pos] = OrderTicket();
+      }
+
+   }
+//---
+   for(int i = 0; i < ArraySize(ORDER_TICKET_CLOSE); i++) {
+      if(ORDER_TICKET_CLOSE[i] != EMPTY_VALUE) {
+         if(OrderSelect(ORDER_TICKET_CLOSE[i], SELECT_BY_TICKET) == true) {
+            //bool z=OrderDelete(OrderTicketClose[i]);
+            int MODE = (OrderType() == OP_BUY) ? MODE_BID : MODE_ASK;
+            bool z = OrderClose(OrderTicket(), OrderLots(), MarketInfo(OrderSymbol(), MODE), 10);
+            if(GetLastError() == 0) {
+               ORDER_TICKET_CLOSE[i] = EMPTY_VALUE;
+            } else {
+               return   false;
+            }
+         }
+      }
+   }
+   ArrayResize(ORDER_TICKET_CLOSE, 1);
+   return   true;
 }
 //+------------------------------------------------------------------+
