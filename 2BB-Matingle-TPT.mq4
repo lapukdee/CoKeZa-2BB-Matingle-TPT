@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.22"
+#define     ea_version     "1.23"
 #property   version        ea_version
 
 #property strict
@@ -43,7 +43,7 @@ extern   string            exLOCK_Date    =  string(eaLOCK_Date);       //# Lock
 extern   string            exSetting      =  " --------------- Setting --------------- ";   // --------------------------------------------------
 extern   int               exMagicnumber  =  2852023;                //• Magicnumber
 
-extern   string            exBB        = " --------------- BBand Signal --------------- ";   // --------------------------------------------------
+extern   string            exBB        = " --------------- BB-Band Signal --------------- ";   // --------------------------------------------------
 
 extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_H1;            //• Magicnumber
 extern   int               exBB_A_Period        = 20;                   //• A - Period
@@ -67,6 +67,15 @@ extern   int               exProfit_Tail_Point  = 250;      //• Tailing (Point
 extern   int               exProfit_Tail_Start  = 200;      //• Start (Point)
 extern   int               exProfit_Tail_Step   = 75;       //• Step (Point)
 
+string            exCapital         = " --------------- Capital and Cut --------------- ";   // --------------------------------------------------
+double            exCapitalValue    =  1000;   //• Capital
+
+bool              exCapitalIs_SL    =  true;   //• Lose
+double            exCapitalPer_SL   =  30;     //• Percent - Lose
+
+bool              exCapitalIs_TP    =  false;   //• Win
+double            exCapitalPer_TP   =  10;      //• Percent - Win
+
 //---
 #include "inc/main.mqh"
 #include "inc/CPort.mqh"
@@ -78,7 +87,6 @@ bool  eaOrder_InsertMode   =  true;   ///• eaOrder_InsertMode  #true  |  false
 bool  eaIsTP_DivByCnt      =  false;    //• eaIsTP_DivByCnt  #false
 
 bool  eaOrder_LotStartByBalance  =  false; //• eaOrder_LotStartByBalance  #false
-double               eaCapital   =  50;   //• eaCapital
 
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
@@ -187,7 +195,7 @@ void OnTick()
 
       if(Port.cnt_All == 0) {
 
-         BBand_EventBreak();
+         BBand_EventBreak();                 //--- get Signal Module
          Print(__FUNCSIG__, __LINE__, "#");
 
          bool  Checker = ProduckLock.Checker();
@@ -250,7 +258,7 @@ void OnTick()
       }
 
    } else {
-
+      //--- All Tick
       //
       if(PortHold.OP != -1) {
          /* Detect Distance */
@@ -258,7 +266,21 @@ void OnTick()
 
          if(PortHold.Value < 0) {
             //--- Port Negtive
-            if(!eaOrder_InsertMode) {
+
+            //---
+            bool  Check_exCapitalIs_SL =  false;
+            if(exCapitalIs_SL) {
+               double   Current  =  (PortHold.Value / exCapitalValue) * 100;
+               if(Current <= -exCapitalPer_SL) {
+
+                  Check_exCapitalIs_SL = Order_Close(PortHold.OP);
+
+               }
+            }
+            //---
+
+            if(!Check_exCapitalIs_SL &&
+               !eaOrder_InsertMode) {
                Print(__FUNCSIG__, __LINE__, "# ", "Port Negtive");
 
                bool  IsDetectDistance = Port.Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
@@ -273,7 +295,17 @@ void OnTick()
             }
             //---
          } else {
-            if(exProfit_Tail) {
+            //---
+            bool  Check_exCapitalIs_SL =  false;
+            if(exCapitalIs_TP) {
+               double   Current  =  (PortHold.Value / exCapitalValue) * 100;
+               if(Current >= exCapitalPer_TP) {
+                  Check_exCapitalIs_SL = Order_Close(PortHold.OP);
+               }
+            }
+            //---
+            if(exProfit_Tail &&
+               !Check_exCapitalIs_SL) {
 
                //--- Port Positive
                //Print(__FUNCSIG__, __LINE__, "# ", "Port Positive");
