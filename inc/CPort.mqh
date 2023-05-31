@@ -322,7 +322,7 @@ double   getOrder_LotStart()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-bool  OrderModifys_SL(int  OP)
+bool  OrderModifys_SL(int  OP, double  PortSL_Price = -1)
 {
    if(!exProfit_Tail) {
       return   exProfit_Tail;
@@ -334,16 +334,25 @@ bool  OrderModifys_SL(int  OP)
    if(OP == OP_BUY) {
       __SL_New   = NormalizeDouble(Bid - (exProfit_Tail_Point * Point), Digits);
 
+      if(PortSL_Price != -1 && __SL_New < PortSL_Price) {
+         return   false;
+      }
+
       if(Port.sumProd_Buy > __SL_New) {
          return   false;
       }
       Draw_HLine(OP_BUY, Bid, clrWhite, "SL_New*Bid");
    } else {
       __SL_New   = NormalizeDouble(Ask + (exProfit_Tail_Point * Point), Digits);
-
+      
+      if(PortSL_Price != -1 && __SL_New > PortSL_Price) {
+         return   false;
+      }
+      
       if(Port.sumProd_Sel < __SL_New) {
          return   false;
       }
+      
       Draw_HLine(OP_SELL, Ask, clrWhite, "SL_New*Ask");
    }
    //---

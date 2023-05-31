@@ -83,11 +83,11 @@ int   BBand_EventBreak()
 
             if(IsStand_A) {
                Print(__LINE__, "# ");
-               if(_Close > BBand_A[0][MODE_MAIN] /*&& __Open > BBand_A[0][MODE_MAIN]*/) {
+               if(_Close > BBand_A[0][MODE_UPPER] && _Close > BBand_A[0][MODE_MAIN]) {
                   Chart.EventBreak_A = OP_SELL;
                   Print(__LINE__, "# ");
                }
-               if(_Close < BBand_A[0][MODE_MAIN] /*&& __Open < BBand_A[0][MODE_MAIN]*/) {
+               if(_Close < BBand_A[0][MODE_LOWER] && _Close < BBand_A[0][MODE_MAIN]) {
                   Chart.EventBreak_A = OP_BUY;
                   Print(__LINE__, "# ");
                }
@@ -99,11 +99,11 @@ int   BBand_EventBreak()
 
             if(IsStand_B) {
                Print(__LINE__, "# ");
-               if(_Close > BBand_B[0][MODE_MAIN] /*&& __Open > BBand_B[0][MODE_MAIN]*/) {
+               if(_Close > BBand_B[0][MODE_UPPER] && _Close > BBand_B[0][MODE_MAIN]) {
                   Chart.EventBreak_B = OP_SELL;
                   Print(__LINE__, "# ");
                }
-               if(_Close < BBand_B[0][MODE_MAIN] /*&& __Open < BBand_B[0][MODE_MAIN]*/) {
+               if(_Close < BBand_B[0][MODE_LOWER] && _Close < BBand_B[0][MODE_MAIN]) {
                   Chart.EventBreak_B = OP_BUY;
                   Print(__LINE__, "# ");
                }
@@ -151,6 +151,29 @@ bool              IsNewBar()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+int   cIsNewBar_Save_Insert = -1;
+bool              IsNewBar_Insert()
+{
+   int getBar = iBars(NULL, exOrder_InsertTF);
+
+   if(cIsNewBar_Save_Insert != getBar) {
+
+      if(cIsNewBar_Save_Insert == -1) {
+         cIsNewBar_Save_Insert = getBar;
+         return   false;
+      }
+
+      cIsNewBar_Save_Insert = getBar;
+      if(cIsNewBar_Save_Insert != -1)
+         return   true;
+
+   }
+
+   return   false;
+}
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 bool  OrderModifys_Profit(int  OP, int  cnt)
 {
    if(!exProfit_TP) {
@@ -162,7 +185,7 @@ bool  OrderModifys_Profit(int  OP, int  cnt)
 
    double   _Profit_TP_Point = double(exProfit_TP_Point);
    if(eaIsTP_DivByCnt) {
-      double   Rate = 0.5;
+      double   Rate = exProfit_TP_PointReduceRate;
       double   Div = MathPow(Rate, cnt - 1);
       _Profit_TP_Point = double(exProfit_TP_Point) * Div;
    }

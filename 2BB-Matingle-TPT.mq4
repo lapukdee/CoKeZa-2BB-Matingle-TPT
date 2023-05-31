@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.22e"
+#define     ea_version     "1.24e"
 #property   version        ea_version
 
 #property strict
@@ -40,22 +40,24 @@ string   EA_Identity_Short = "2BB";
 //+------------------------------------------------------------------+
 extern   string            exEAname       =  "v" + string(ea_version);  //# 2BB-Matingle-TPT
 extern   string            exLOCK_Date    =  string(eaLOCK_Date);       //# Lock
-extern   string            exSetting      =  " --------------- Setting --------------- ";   // --------------------------------------------------
+extern   string            exSetting      =  " --------------- Setting --------------- "; // --------------------------------------------------
 extern   int               exMagicnumber  =  2852023;                //• Magicnumber
 
-extern   string            exBB        = " --------------- BBand Signal --------------- ";   // --------------------------------------------------
+extern   string            exBB           =  " --------------- BBand Signal --------------- ";  // --------------------------------------------------
 
-extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_H1;            //• Magicnumber
+extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_H1;            //• Timeframe
 extern   int               exBB_A_Period        = 20;                   //• A - Period
 extern   int               exBB_B_Period        = 30;                   //• B - Period
 extern   int               exBB_Applied_price   = PRICE_CLOSE;          //• Applied price
 extern   double            exBB_Deviation       = 2;                    //• Standard Deviations
 extern   int               exBB_BandsShift      = 0;                    //• Bands Shift
 
-extern   string            exOrder        = " --------------- Martingale --------------- ";   // --------------------------------------------------
+extern   string            exOrder        = " --------------- Martingale --------------- ";  // --------------------------------------------------
 extern   double            exOrder_LotStart        = 0.01;  //• Lot - Start
 extern   double            exOrder_LotMulti        = 2;     //• Lot - Multi
 extern   int               exOrder_InDistancePoint = 300;   //• Distance of Order New (Point)
+
+extern   ENUM_TIMEFRAMES   exOrder_InsertTF        = PERIOD_M30;            //• Insert Timeframe
 
 extern   string            exProfit             = " --------------- Profit --------------- ";   // --------------------------------------------------
 
@@ -70,16 +72,18 @@ extern   int               exProfit_Tail_Step   = 75;       //• Step (Point)
 //---
 #include "inc/main.mqh"
 #include "inc/CPort.mqh"
+//---
 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-extern   bool  eaOrder_InsertMode   =  true;   ///• eaOrder_InsertMode  #true  |  false: Old (All tick)
+extern   bool  eaOrder_InsertMode   =  true;    //• eaOrder_InsertMode  #true  |  false: Old (All tick)
 extern   bool  eaIsTP_DivByCnt      =  true;    //• eaIsTP_DivByCnt  #false
 
 extern   bool  eaOrder_LotStartByBalance  =  true; //• eaOrder_LotStartByBalance  #false
 extern   double               eaCapital   =  50;   //• eaCapital
 
+extern   double   exProfit_TP_PointReduceRate   =  0.5;   //• TP PointReduceRate
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -209,46 +213,48 @@ void OnTick()
          }
 
       } else {
-         //---    feature/feature_OrderInsert-UseLowHigh
-         if(eaOrder_InsertMode) {
 
-            if(PortHold.OP != -1 && PortHold.Value < 0) {
+      }
 
-               int   Point_Distance = -1;
+   } else if(IsNewBar_Insert()) {
+      //---    feature/feature_OrderInsert-UseLowHigh
+      if(eaOrder_InsertMode) {
 
-               if(PortHold.OP == OP_BUY) {
-                  Point_Distance = int((iLow(NULL, exBB_TF, 1) - Port.ActivePlace_BOT) / Point); //Buy : Low -  Bot
-               } else {
-                  Point_Distance = int((Port.ActivePlace_TOP - iHigh(NULL, exBB_TF, 1)) / Point); //Sell : Top - High
-               }
+         if(PortHold.OP != -1 && PortHold.Value < 0) {
 
-               bool  IsDetectDistance =  Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
-               if(IsDetectDistance) {
+            int   Point_Distance = -1;
 
-                  if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
-                     Port.Calculator();
-                     {
-                        Hold_Mapping();
-                     }
-                     {
-                        // Fiexd TP Point
-                        OrderModifys_Profit(PortHold.OP, PortHold.Cnt);
-                     }
-                     {
-                        OrderModifys_SL(PortHold.OP);
-                     }
-                     //---
+            if(PortHold.OP == OP_BUY) {
+               Point_Distance = int((iLow(NULL, exOrder_InsertTF, 1) - Port.ActivePlace_BOT) / Point); //Buy : Low -  Bot
+            } else {
+               Point_Distance = int((Port.ActivePlace_TOP - iHigh(NULL, exOrder_InsertTF, 1)) / Point); //Sell : Top - High
+            }
 
+            bool  IsDetectDistance =  Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
+            if(IsDetectDistance) {
 
+               if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
+                  Port.Calculator();
+                  {
+                     Hold_Mapping();
                   }
+                  {
+                     // Fiexd TP Point
+                     OrderModifys_Profit(PortHold.OP, PortHold.Cnt);
+                  }
+                  {
+                     OrderModifys_SL(PortHold.OP);
+                  }
+                  //---
+
 
                }
 
             }
 
          }
-      }
 
+      }
    } else {
 
       //
@@ -306,7 +312,7 @@ void OnTick()
 
                   if(Distance >= Distance_Test) {
                      //--- >> Order Modify Group
-                     OrderModifys_SL(PortHold.OP);
+                     OrderModifys_SL(PortHold.OP, PortHold.PortSL_Price);
                   }
                } else {
                   OrderModifys_SL(PortHold.OP);
@@ -343,6 +349,9 @@ void OnTick()
    C += "A.P.TOP" + ": " + Port.ActivePoint_TOP + "\n";
    C += "A.P.BOT" + ": " + Port.ActivePoint_BOT + "\n";
    C += "Distance" + ": " + Port.Point_Distance + "\n";
+   C += "\n";
+
+   C += "Hold.PortSL_Price" + ": " + PortHold.PortSL_Price + "\n";
 
    C += "\n";
 
