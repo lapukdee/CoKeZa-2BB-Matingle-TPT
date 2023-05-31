@@ -188,6 +188,9 @@ bool  OrderModifys_Profit(int  OP, int  cnt)
       double   Rate = exProfit_TP_PointReduceRate;
       double   Div = MathPow(Rate, cnt - 1);
       _Profit_TP_Point = double(exProfit_TP_Point) * Div;
+      
+      //---
+      Tailing.SetValue(int(_Profit_TP_Point));
    }
 
    Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point: ", NormalizeDouble(_Profit_TP_Point, 0));

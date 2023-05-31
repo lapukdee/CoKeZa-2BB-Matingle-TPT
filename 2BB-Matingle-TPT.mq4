@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.24e"
+#define     ea_version     "1.3e"
 #property   version        ea_version
 
 #property strict
@@ -64,14 +64,15 @@ extern   string            exProfit             = " --------------- Profit -----
 extern   bool              exProfit_TP          = true;     // --------------- TP ---------------
 extern   int               exProfit_TP_Point    = 300;      //• Order TP (Point)
 
-extern   bool              exProfit_Tail        = true;     // --------------- Tailing ---------------
-extern   int               exProfit_Tail_Point  = 250;      //• Tailing (Point)
-extern   int               exProfit_Tail_Start  = 200;      //• Start (Point)
-extern   int               exProfit_Tail_Step   = 75;       //• Step (Point)
+extern   bool              exProfit_Tail           = true;     // --------------- Tailing ---------------
+extern   int               exProfit_Tail_Point_P   = 33;      //• Tailing | % : [Order TP (Point)]
+extern   int               exProfit_Tail_Start_P   = 66;      //• Start | % : [Order TP (Point)]
+extern   int               exProfit_Tail_Step_P    = 33;       //• Step | % : [Order TP (Point)]
 
 //---
 #include "inc/main.mqh"
 #include "inc/CPort.mqh"
+#include "inc/Profit_Tail.mqh"
 //---
 
 //+------------------------------------------------------------------+
@@ -90,7 +91,10 @@ extern   double   exProfit_TP_PointReduceRate   =  0.5;   //• TP PointReduceRa
 int OnInit()
 {
    {
-      if(exProfit_TP_Point <= exProfit_Tail_Start) {
+      Tailing.SetValue(exProfit_TP_Point);
+   }
+   {
+      if(exProfit_TP_Point <= Tailing.Tail_Start) {
          ExpertRemove();
       }
       //if(exProfit_Tail_Point <= exProfit_Tail_Start) {
@@ -307,7 +311,7 @@ void OnTick()
                      //Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                   }
 
-                  int   Distance_Test  =  ( PortHold.Cnt  == 1) ? exProfit_Tail_Start : exProfit_Tail_Point + exProfit_Tail_Step;
+                  int   Distance_Test  =  ( PortHold.Cnt  == 1) ? Tailing.Tail_Start : Tailing.Tail_Point + Tailing.Tail_Step;
                   //Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
 
                   if(Distance >= Distance_Test) {
