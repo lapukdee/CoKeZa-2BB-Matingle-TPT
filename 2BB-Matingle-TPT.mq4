@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.23"
+#define     ea_version     "1.30"
 #property   version        ea_version
 
 #property strict
@@ -45,7 +45,7 @@ extern   int               exMagicnumber  =  2852023;                //• Magic
 
 extern   string            exBB        = " --------------- BB-Band Signal --------------- ";   // --------------------------------------------------
 
-extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_H1;            //• Magicnumber
+extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_H1;            //• Timeframe
 extern   int               exBB_A_Period        = 20;                   //• A - Period
 extern   int               exBB_B_Period        = 30;                   //• B - Period
 extern   int               exBB_Applied_price   = PRICE_CLOSE;          //• Applied price
@@ -67,14 +67,14 @@ extern   int               exProfit_Tail_Point  = 250;      //• Tailing (Point
 extern   int               exProfit_Tail_Start  = 200;      //• Start (Point)
 extern   int               exProfit_Tail_Step   = 75;       //• Step (Point)
 
-string            exCapital         = " --------------- Capital and Cut --------------- ";   // --------------------------------------------------
-double            exCapitalValue    =  1000;   //• Capital
+extern   string            exCapital         = " --------------- Capital and Cut --------------- ";   // --------------------------------------------------
+extern   double            exCapitalValue    =  1000;   //• Capital
 
-bool              exCapitalIs_SL    =  true;   //• Lose
-double            exCapitalPer_SL   =  30;     //• Percent - Lose
+extern   bool              exCapitalIs_SL    =  false;  //• Lose
+extern   double            exCapitalPer_SL   =  30;     //• Percent - Lose
 
-bool              exCapitalIs_TP    =  false;   //• Win
-double            exCapitalPer_TP   =  10;      //• Percent - Win
+extern   bool              exCapitalIs_TP    =  false;   //• Win
+extern   double            exCapitalPer_TP   =  10;      //• Percent - Win
 
 //---
 #include "inc/main.mqh"
