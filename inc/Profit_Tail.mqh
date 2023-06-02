@@ -21,9 +21,9 @@ public:
 
    ~CTailing() {};
 
-   void  SetValue(int   __Profit_TP_Point)
+   void  SetValue(int   Profit_TP_Point__)
    {
-      Priofit_Static_Point = __Profit_TP_Point;
+      Priofit_Static_Point = Profit_TP_Point__;
       //Print(__FUNCSIG__, __LINE__, "# Priofit_Static_Point: ", Priofit_Static_Point);
 
       Tail_Point = int(Priofit_Static_Point * toPer(exProfit_Tail_Point_P));
