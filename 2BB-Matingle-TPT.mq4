@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.3e"
+#define     ea_version     "1.4e"
 #property   version        ea_version
 
 #property strict
@@ -43,14 +43,16 @@ extern   string            exLOCK_Date    =  string(eaLOCK_Date);       //# Lock
 extern   string            exSetting      =  " --------------- Setting --------------- "; // --------------------------------------------------
 extern   int               exMagicnumber  =  2852023;                //• Magicnumber
 
-extern   string            exBB           =  " --------------- BBand Signal --------------- ";  // --------------------------------------------------
+extern   string               exBB           =  " --------------- BBand Signal --------------- ";  // --------------------------------------------------
 
-extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_H1;            //• Timeframe
-extern   int               exBB_A_Period        = 20;                   //• A - Period
-extern   int               exBB_B_Period        = 30;                   //• B - Period
-extern   int               exBB_Applied_price   = PRICE_CLOSE;          //• Applied price
-extern   double            exBB_Deviation       = 2;                    //• Standard Deviations
-extern   int               exBB_BandsShift      = 0;                    //• Bands Shift
+extern   ENUM_TIMEFRAMES      exBB_TF                 = PERIOD_H1;       //• Timeframe
+extern   int                  exBB_A_Period           = 20;              //• A - Period
+extern   int                  exBB_B_Period           = 30;              //• B - Period
+extern   ENUM_APPLIED_PRICE   exBB_Applied_price_A    = PRICE_CLOSE;     //• A - Applied
+extern   ENUM_APPLIED_PRICE   exBB_Applied_price_B    = PRICE_CLOSE;     //• B - Applied
+extern   double               exBB_Deviation_A        = 2;               //• A - Deviations
+extern   double               exBB_Deviation_B        = 2;               //• B - Deviations
+extern   int                  exBB_BandsShift         = 0;               //• Bands Shift
 
 extern   string            exOrder        = " --------------- Martingale --------------- ";  // --------------------------------------------------
 extern   double            exOrder_LotStart        = 0.01;  //• Lot - Start
@@ -59,10 +61,10 @@ extern   int               exOrder_InDistancePoint = 300;   //• Distance of Or
 
 extern   ENUM_TIMEFRAMES   exOrder_InsertTF        = PERIOD_M30;            //• Insert Timeframe
 
-extern   string            exProfit             = " --------------- Profit --------------- ";   // --------------------------------------------------
+extern   string            exProfit             = " --------------- Profit ---------------  [auto by BB-A]";   // --------------------------------------------------
 
-extern   bool              exProfit_TP          = true;     // --------------- TP ---------------
-extern   int               exProfit_TP_Point    = 300;      //• Order TP (Point)
+bool              exProfit_TP          = true;     // --------------- TP ---------------
+int      __Profit_TP_Point    = -1;      //• Order TP (Point)
 
 extern   bool              exProfit_Tail           = true;     // --------------- Tailing ---------------
 extern   int               exProfit_Tail_Point_P   = 33;      //• Tailing | % : [Order TP (Point)]
@@ -91,15 +93,8 @@ extern   double   exProfit_TP_PointReduceRate   =  0.5;   //• TP PointReduceRa
 int OnInit()
 {
    {
-      Tailing.SetValue(exProfit_TP_Point);
-   }
-   {
-      if(exProfit_TP_Point <= Tailing.Tail_Start) {
-         ExpertRemove();
-      }
-      //if(exProfit_Tail_Point <= exProfit_Tail_Start) {
-      //   ExpertRemove();
-      //}
+      __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
+      Tailing.SetValue(__Profit_TP_Point);
    }
 //---
    {
@@ -209,6 +204,7 @@ void OnTick()
             if(OrderSend_Active(Chart.EventBreak_R, 0)) {
                Port.Calculator();
 
+               __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
                //Fiexd TP Point
                OrderModifys_Profit(Chart.EventBreak_R, 1);
 
@@ -220,18 +216,24 @@ void OnTick()
 
       }
 
-   } else if(IsNewBar_Insert()) {
+   }
+   if(IsNewBar_Insert()) {
+
+      Print("IsNewBar_Insert()");
       //---    feature/feature_OrderInsert-UseLowHigh
       if(eaOrder_InsertMode) {
+         Print("eaOrder_InsertMode");
 
-         if(PortHold.OP != -1 && PortHold.Value < 0) {
+         if(PortHold.OP != -1  &&
+            PortHold.Value < 0) {
+            Print("eaOrder_InsertMode@Inside");
 
             int   Point_Distance = -1;
 
             if(PortHold.OP == OP_BUY) {
-               Point_Distance = int((iLow(NULL, exOrder_InsertTF, 1) - Port.ActivePlace_BOT) / Point); //Buy : Low -  Bot
+               Point_Distance = int((iLow(NULL, exOrder_InsertTF, 0) - Port.ActivePlace_BOT) / Point); //Buy : Low -  Bot
             } else {
-               Point_Distance = int((Port.ActivePlace_TOP - iHigh(NULL, exOrder_InsertTF, 1)) / Point); //Sell : Top - High
+               Point_Distance = int((Port.ActivePlace_TOP - iHigh(NULL, exOrder_InsertTF, 0)) / Point); //Sell : Top - High
             }
 
             bool  IsDetectDistance =  Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
@@ -255,10 +257,9 @@ void OnTick()
                }
 
             }
-
          }
-
       }
+      //---
    } else {
 
       //
@@ -355,7 +356,9 @@ void OnTick()
    C += "Distance" + ": " + Port.Point_Distance + "\n";
    C += "\n";
 
-   C += "Hold.PortSL_Price" + ": " + PortHold.PortSL_Price + "\n";
+//C += "Hold.PortSL_Price" + ": " + PortHold.PortSL_Price + "\n";
+   C += "__Profit_TP_Point" + ": " + __Profit_TP_Point + "\n";
+   C += "BarS_Insert" + ": " + cIsNewBar_Save_Insert + "\n";
 
    C += "\n";
 
