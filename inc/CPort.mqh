@@ -195,6 +195,7 @@ public:
             } else {
                PortIsHaveTP_Sell.IsResult = true;
             }
+            
          }
          //---
          {
@@ -214,12 +215,12 @@ public:
                if(cnt_Sel > 0) {
                   Point_Distance = ActivePoint_TOP;
 
-                  Draw_SumProduct(5, ActivePlace_TOP + RimInsert, clrMidnightBlue, "_ActivePlace_TOP_RimInsert");
+                  Draw_SumProduct(5, ActivePlace_TOP + RimInsert, clrSlateBlue, "_ActivePlace_TOP_RimInsert");
                }
                if(cnt_Buy > 0) {
                   Point_Distance = ActivePoint_BOT;
 
-                  Draw_SumProduct(5, ActivePlace_BOT - RimInsert, clrMidnightBlue, "_ActivePlace_BOT_RimInsert");
+                  Draw_SumProduct(5, ActivePlace_BOT - RimInsert, clrSlateBlue, "_ActivePlace_BOT_RimInsert");
                }
 
             } else {

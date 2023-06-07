@@ -8,7 +8,7 @@
    ""                      => Account not locked
 
 */
-#define     eaLOCK_Date    "10.6.2023"
+#define     eaLOCK_Date    "17.6.2023"
 /*
    - Compared to the center time +0
    #Example.
@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.30"
+#define     ea_version     "1.31"
 #property   version        ea_version
 
 #property strict
@@ -45,12 +45,12 @@ extern   int               exMagicnumber  =  2852023;                //• Magic
 
 extern   string            exBB        = " --------------- BB-Band Signal --------------- ";   // --------------------------------------------------
 
-extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_H1;            //• Timeframe
-extern   int               exBB_A_Period        = 20;                   //• A - Period
-extern   int               exBB_B_Period        = 30;                   //• B - Period
-extern   int               exBB_Applied_price   = PRICE_CLOSE;          //• Applied price
-extern   double            exBB_Deviation       = 2;                    //• Standard Deviations
-extern   int               exBB_BandsShift      = 0;                    //• Bands Shift
+extern   ENUM_TIMEFRAMES      exBB_TF              = PERIOD_H1;            //• Timeframe
+extern   int                  exBB_A_Period        = 20;                   //• A - Period
+extern   int                  exBB_B_Period        = 30;                   //• B - Period
+extern   ENUM_APPLIED_PRICE   exBB_Applied_price   = PRICE_CLOSE;          //• Applied price
+extern   double               exBB_Deviation       = 2;                    //• Standard Deviations
+extern   int                  exBB_BandsShift      = 0;                    //• Bands Shift
 
 extern   string            exOrder        = " --------------- Martingale --------------- ";   // --------------------------------------------------
 extern   double            exOrder_LotStart        = 0.01;  //• Lot - Start
@@ -94,7 +94,22 @@ bool  eaOrder_LotStartByBalance  =  false; //• eaOrder_LotStartByBalance  #fal
 int OnInit()
 {
    {
-      if(exProfit_TP_Point <= exProfit_Tail_Start) {
+
+      if(exProfit_Tail_Point <= exProfit_Tail_Start) {
+         Print(__FUNCSIG__, __LINE__, "#", " exProfit_Tail_Point:", exProfit_Tail_Point);
+         Print(__FUNCSIG__, __LINE__, "#", " exProfit_Tail_Start:", exProfit_Tail_Start);
+
+         Print(__LINE__, "$$ exProfit_Tail_Point <= exProfit_Tail_Start");
+         ExpertRemove();
+      }
+
+      double   VOLUME_MIN = SymbolInfoDouble(NULL, SYMBOL_VOLUME_MIN);
+
+      if(exOrder_LotStart < VOLUME_MIN) {
+         Print(__FUNCSIG__, __LINE__, "#", " VOLUME_MIN:", VOLUME_MIN);
+         Print(__FUNCSIG__, __LINE__, "#", " exOrder_LotStart:", exOrder_LotStart);
+
+         Print(__LINE__, "$$ exOrder_LotStart < VOLUME_MIN");
          ExpertRemove();
       }
       //if(exProfit_Tail_Point <= exProfit_Tail_Start) {
@@ -121,7 +136,6 @@ int OnInit()
 void OnDeinit(const int reason)
 {
 //---
-
 }
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
@@ -333,7 +347,10 @@ void OnTick()
                      //Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                   }
 
-                  int   Distance_Test  =  ( PortHold.Cnt  == 1) ? exProfit_Tail_Start : exProfit_Tail_Point + exProfit_Tail_Step;
+                  int   Distance_Test  =  ( PortHold.Cnt  == 1) ?
+                                          exProfit_Tail_Start :
+                                          exProfit_Tail_Point + exProfit_Tail_Step;
+                                          
                   //Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
 
                   if(Distance >= Distance_Test) {
