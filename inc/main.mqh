@@ -29,13 +29,11 @@ double BBand_getValue_Result[1][3];
 //+------------------------------------------------------------------+
 bool  BBand_getValue(ENUM_TIMEFRAMES   timeframe, int vPeriod_, double  BB_Deviation, ENUM_APPLIED_PRICE BB_Applied_price)
 {
-   string            symbol      = NULL;      // symbol
-
    int          shift = Global.RoomFocus;           // shift
 
-   BBand_getValue_Result[0][MODE_MAIN]  = iBands(symbol, timeframe, vPeriod_, BB_Deviation, exBB_BandsShift, BB_Applied_price, MODE_MAIN, shift);
-   BBand_getValue_Result[0][MODE_UPPER] = iBands(symbol, timeframe, vPeriod_, BB_Deviation, exBB_BandsShift, BB_Applied_price, MODE_UPPER, shift);
-   BBand_getValue_Result[0][MODE_LOWER] = iBands(symbol, timeframe, vPeriod_, BB_Deviation, exBB_BandsShift, BB_Applied_price, MODE_LOWER, shift);
+   BBand_getValue_Result[0][MODE_MAIN]  = iBands(NULL, timeframe, vPeriod_, BB_Deviation, exBB_BandsShift, BB_Applied_price, MODE_MAIN, shift);
+   BBand_getValue_Result[0][MODE_UPPER] = iBands(NULL, timeframe, vPeriod_, BB_Deviation, exBB_BandsShift, BB_Applied_price, MODE_UPPER, shift);
+   BBand_getValue_Result[0][MODE_LOWER] = iBands(NULL, timeframe, vPeriod_, BB_Deviation, exBB_BandsShift, BB_Applied_price, MODE_LOWER, shift);
 
 
    BBand_getValue_Result[0][MODE_MAIN] = NormalizeDouble(BBand_getValue_Result[0][MODE_MAIN], Digits);
@@ -44,6 +42,8 @@ bool  BBand_getValue(ENUM_TIMEFRAMES   timeframe, int vPeriod_, double  BB_Devia
 
    return true;
 }
+//+------------------------------------------------------------------+
+//|                                                                  |
 //+------------------------------------------------------------------+
 int   BBand_EventBreak()
 {
@@ -195,39 +195,32 @@ bool  OrderModifys_Profit(int  OP, int  cnt)
    Print(__FUNCSIG__, __LINE__, "# ", "cnt: ", cnt);
    double   __TP_New = -1;
 
-   if(__Profit_TP_Point == -1) {
-      __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
-   }
-   double   Profit_TP_Point = double(__Profit_TP_Point);
-
+   double   _Profit_TP_Point = double(__Profit_TP_Point);
    if(eaIsTP_DivByCnt) {
-      double   Rate = exProfit_TP_PointReduceRate;
+      double   Rate = 0.5;
       double   Div = MathPow(Rate, cnt - 1);
-      Profit_TP_Point = Profit_TP_Point * Div;
-
-      //---
-      Tailing.SetValue(int(Profit_TP_Point));
+      _Profit_TP_Point = double(_Profit_TP_Point) * Div;
    }
 
-   Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point: ", NormalizeDouble(Profit_TP_Point, 0));
+   Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point: ", NormalizeDouble(_Profit_TP_Point, 0));
    {
-      if(Profit_TP_Point <= 0) {
-         Profit_TP_Point = 1;
-         Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point <= 0: ", Profit_TP_Point);
+      if(_Profit_TP_Point <= 0) {
+         _Profit_TP_Point = 1;
+         Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point <= 0: ", _Profit_TP_Point);
       }
-      Profit_TP_Point = Profit_TP_Point * Point;      //to Dot
+      _Profit_TP_Point = _Profit_TP_Point * Point;
 
    }
 
 
    if(OP == OP_BUY) {
-      __TP_New   = NormalizeDouble(Port.sumProd_Buy + Profit_TP_Point, Digits);
+      __TP_New   = NormalizeDouble(Port.sumProd_Buy + _Profit_TP_Point, Digits);
 
       if(Port.sumProd_Buy > __TP_New) {
          return   false;
       }
    } else {
-      __TP_New   = NormalizeDouble(Port.sumProd_Sel - Profit_TP_Point, Digits);
+      __TP_New   = NormalizeDouble(Port.sumProd_Sel - _Profit_TP_Point, Digits);
 
       if(Port.sumProd_Sel < __TP_New) {
          return   false;
