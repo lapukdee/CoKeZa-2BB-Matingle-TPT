@@ -20,13 +20,13 @@ public:
    int                  ActivePoint_TOP, ActivePoint_BOT;
    //---
 
-   CPort(void)
+                     CPort(void)
    {
       Init();
 
       //SymbolInfoDouble
    };
-   ~CPort(void) {};
+                    ~CPort(void) {};
    void              Init()
    {
       cnt_Buy  =  0;
@@ -60,23 +60,30 @@ public:
       //---
    }
 
-   struct sPortIsHave_TP {
-      int            Counter;
-      double         Price;
-      bool           IsSL_Eq;
+   struct sTPT {
 
-      bool           IsResult;
+      int            Counter_Standby,  Counter_Runner_;
+      double         Price_Standby,    Price_Runner_;
+      bool           Eq_Standby,       Eq_Runner_;
+
+      int            State;         // 0: Start/Normal,  1: TialingRuner
+      bool           FoceModify;
 
       void           Clear()
       {
-         Counter = 0;
-         Price   = -1;
-         IsSL_Eq = true;
-         IsResult =  false;
+         Counter_Standby = 0;
+         Counter_Runner_ = 0;
+         Price_Standby = -1;
+         Price_Runner_ = -1;
+         Eq_Standby = true;
+         Eq_Runner_ = true;
+
+         State = -1;       // 0: Start/Normal,  1: TialingRuner
+         FoceModify = false;
       }
    };
-   sPortIsHave_TP    PortIsHaveTP_Buy;
-   sPortIsHave_TP    PortIsHaveTP_Sell;
+   sTPT              TPT_Buy;
+   sTPT              TPT_Sell;
 
    void              Calculator()
    {
@@ -85,8 +92,8 @@ public:
          Init();
 
          {
-            PortIsHaveTP_Buy.Clear();
-            PortIsHaveTP_Sell.Clear();
+            TPT_Buy.Clear();
+            TPT_Sell.Clear();
          }
 
          int   __OrdersTotal   =  OrdersTotal();
@@ -117,25 +124,33 @@ public:
                   sumLot_All += OrderLots();
 
                   sumHold_Buy += OrderProfit() + OrderCommission() + OrderSwap();
+
                   {
                      /* Check SL */
                      double   _OrderStopLoss = OrderStopLoss();
                      if(_OrderStopLoss != 0) {
-                        PortIsHaveTP_Buy.Counter++;
+                        //Runner
 
-                        if(PortIsHaveTP_Buy.Price == -1) {
-                           PortIsHaveTP_Buy.Price = _OrderStopLoss;
-                        } else {
-                           if(PortIsHaveTP_Buy.Price != _OrderStopLoss) {
-                              PortIsHaveTP_Buy.IsSL_Eq = false;
+                        if(cnt_Buy == 1) {
+                           TPT_Buy.Price_Runner_ = _OrderStopLoss;
+                           TPT_Buy.Counter_Standby++;
+                        }
+                        if(cnt_Buy >= 2 && TPT_Buy.Eq_Runner_)  {
+                           if(TPT_Buy.Price_Runner_ == _OrderStopLoss) {
+                              TPT_Buy.Counter_Standby++;
+                           } else {
+                              TPT_Buy.Eq_Runner_   =  false;
                            }
                         }
-                     } else {
-                        PortIsHaveTP_Buy.Counter   = cnt_Buy;
-                        PortIsHaveTP_Buy.IsSL_Eq   = true;
-                        PortIsHaveTP_Buy.Price     = OrderOpenPrice();
+
                      }
+                     if(_OrderStopLoss == 0) {
+                        //Standby
+                        TPT_Buy.Counter_Standby++;
+                     }
+
                   }
+
                }
 
                if(OrderType_ == OP_BUYSTOP || OrderType_ == OP_BUYLIMIT) {
@@ -152,26 +167,33 @@ public:
                   sumLot_All += OrderLots();
 
                   sumHold_Sel += OrderProfit() + OrderCommission() + OrderSwap();
+
                   {
                      /* Check SL */
                      double   _OrderStopLoss = OrderStopLoss();
-
                      if(_OrderStopLoss != 0) {
-                        PortIsHaveTP_Sell.Counter++;
+                        //Runner
 
-                        if(PortIsHaveTP_Sell.Price == -1) {
-                           PortIsHaveTP_Sell.Price = _OrderStopLoss;
-                        } else {
-                           if(PortIsHaveTP_Sell.Price != _OrderStopLoss) {
-                              PortIsHaveTP_Sell.IsSL_Eq = false;
+                        if(cnt_Sel == 1) {
+                           TPT_Sell.Price_Runner_ = _OrderStopLoss;
+                           TPT_Sell.Counter_Standby++;
+                        }
+                        if(cnt_Sel >= 2 && TPT_Sell.Eq_Runner_)  {
+                           if(TPT_Sell.Price_Runner_ == _OrderStopLoss) {
+                              TPT_Sell.Counter_Standby++;
+                           } else {
+                              TPT_Sell.Eq_Runner_   =  false;
                            }
                         }
-                     } else {
-                        PortIsHaveTP_Sell.Counter  = cnt_Sel;
-                        PortIsHaveTP_Sell.IsSL_Eq  = true;
-                        PortIsHaveTP_Sell.Price    = OrderOpenPrice();
+
                      }
+                     if(_OrderStopLoss == 0) {
+                        //Standby
+                        TPT_Sell.Counter_Standby++;
+                     }
+
                   }
+
                }
 
                if(OrderType_ == OP_SELLSTOP || OrderType_ == OP_SELLLIMIT) {
@@ -180,23 +202,7 @@ public:
 
             }
          }
-         {
 
-            if(cnt_Buy > 0) {
-               PortIsHaveTP_Buy.IsResult = (cnt_Buy == PortIsHaveTP_Buy.Counter) &&
-                                           PortIsHaveTP_Buy.IsSL_Eq;
-            } else {
-               PortIsHaveTP_Buy.IsResult = true;
-            }
-
-            if(cnt_Sel > 0) {
-               PortIsHaveTP_Sell.IsResult = (cnt_Sel == PortIsHaveTP_Sell.Counter) &&
-                                            PortIsHaveTP_Sell.IsSL_Eq;
-            } else {
-               PortIsHaveTP_Sell.IsResult = true;
-            }
-            
-         }
          //---
          {
             /* v1.64 */
@@ -261,6 +267,57 @@ public:
 
          sumHold_All = sumHold_Buy + sumHold_Sel;
 
+
+         {/* Profit taillng */
+
+            {/* Buy */
+               if(cnt_Buy > 0) {
+
+                  if(cnt_Buy == TPT_Buy.Counter_Standby &&
+                     TPT_Buy.Counter_Runner_ == 0 ) {
+
+                     TPT_Buy.Price_Standby = sumProd_Buy;
+                     TPT_Buy.Eq_Standby    =  true;
+
+
+                  }
+                  if(cnt_Buy == TPT_Buy.Counter_Runner_ &&
+                     TPT_Buy.Counter_Standby == 0 ) {
+
+                     if(TPT_Buy.Eq_Runner_ == false) {
+                        TPT_Buy.FoceModify = true;
+                     }
+
+                  }
+
+                  TPT_Buy.FoceModify = true;
+               }
+            }
+            {/* Sell */
+               if(cnt_Sel > 0) {
+
+                  if(cnt_Sel == TPT_Sell.Counter_Standby &&
+                     TPT_Sell.Counter_Runner_ == 0 ) {
+
+                     TPT_Sell.Price_Standby = sumProd_Sel;
+                     TPT_Sell.Eq_Standby    =  true;
+
+
+                  }
+                  if(cnt_Sel == TPT_Sell.Counter_Runner_ &&
+                     TPT_Sell.Counter_Standby == 0 ) {
+
+                     if(TPT_Sell.Eq_Runner_ == false) {
+                        TPT_Sell.FoceModify = true;
+                     }
+
+                  }
+
+                  TPT_Sell.FoceModify = true;
+               }
+            }
+
+         }
       }
    }
 private:
@@ -347,7 +404,7 @@ bool  OrderModifys_SL(int  OP)
       }
       Draw_HLine(OP_SELL, Ask, clrWhite, "SL_New*Ask");
    }
-   //---
+//---
 
    int   __OrdersTotal   =  OrdersTotal();
    for(int icnt = 0; icnt < __OrdersTotal; icnt++) {

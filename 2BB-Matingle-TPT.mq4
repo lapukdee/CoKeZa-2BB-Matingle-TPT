@@ -95,7 +95,7 @@ int OnInit()
 {
    {
 
-      if(exProfit_Tail_Point <= exProfit_Tail_Start) {
+      if(exProfit_Tail_Point < exProfit_Tail_Start) {
          Print(__FUNCSIG__, __LINE__, "#", " exProfit_Tail_Point:", exProfit_Tail_Point);
          Print(__FUNCSIG__, __LINE__, "#", " exProfit_Tail_Start:", exProfit_Tail_Start);
 
@@ -180,8 +180,8 @@ void  Hold_Mapping()
       PortHold.Cnt            = Port.cnt_Buy;
       PortHold.Value          = Port.sumHold_Buy;
 
-      PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Buy.IsResult;
-      PortHold.PortSL_Price   = Port.PortIsHaveTP_Buy.Price;
+      //PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Buy.IsResult;
+      //PortHold.PortSL_Price   = Port.PortIsHaveTP_Buy.Price;
 
    }
    if(Port.cnt_Sel > 0) {
@@ -189,8 +189,8 @@ void  Hold_Mapping()
       PortHold.Cnt            = Port.cnt_Sel;
       PortHold.Value          = Port.sumHold_Sel;
 
-      PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Sell.IsResult;
-      PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
+      //PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Sell.IsResult;
+      //PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
 
    }
 }
@@ -347,7 +347,7 @@ void OnTick()
                      //Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                   }
 
-                  int   Distance_Test  =  ( PortHold.Cnt  == 1) ?
+                  int   Distance_Test  =  (PortHold.Cnt  == 1) ?
                                           exProfit_Tail_Start :
                                           exProfit_Tail_Point + exProfit_Tail_Step;
                                           
