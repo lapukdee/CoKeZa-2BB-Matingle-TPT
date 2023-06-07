@@ -12,8 +12,8 @@ class CProductLock
    string            Account[];
    bool              EA_OrderRem;
 public:
-   bool              EA_Allow,EA_AllowAccount,EA_AllowDate;
-   int               EA_Point,EA_AllowPoint;
+   bool              EA_Allow, EA_AllowAccount, EA_AllowDate;
+   int               EA_Point, EA_AllowPoint;
 
    void              CProductLock()
    {
@@ -29,7 +29,7 @@ public:
       if(EA_Point >= EA_AllowPoint) {
 
          {/* hotfix/CutloseByEQ [v1.644] */
-         
+
             if(IsOptimization() || IsTesting())
                return   true;
 
@@ -56,18 +56,18 @@ public:
    bool              Checker()
    {
       EA_AllowAccount = IsEA_AllowAccount();
-      Print(__FUNCTION__,"#",__LINE__," EA_AllowAccount : ",EA_AllowAccount);
+      Print(__FUNCTION__, "#", __LINE__, " EA_AllowAccount : ", EA_AllowAccount);
       //---
       EA_AllowDate   = IsEA_AllowDate();
-      Print(__FUNCTION__,"#",__LINE__," EA_AllowDate : ",EA_AllowDate);
+      Print(__FUNCTION__, "#", __LINE__, " EA_AllowDate : ", EA_AllowDate);
       //---
       EA_OrderRem = Port.cnt_All > 0;
-      Print(__FUNCTION__,"#",__LINE__," EA_OrderRem : ",EA_OrderRem);
+      Print(__FUNCTION__, "#", __LINE__, " EA_OrderRem : ", EA_OrderRem);
       CheckerPoint();
 
       Print("");
       EA_Allow =  EA_AllowAccount && (EA_AllowDate || EA_OrderRem);
-      Print(__FUNCTION__,"#",__LINE__," ** EA_Allow ** : ",EA_Allow);
+      Print(__FUNCTION__, "#", __LINE__, " ** EA_Allow ** : ", EA_Allow);
       Print("");
 
       return   EA_Allow;
@@ -84,7 +84,7 @@ private:
       if(EA_OrderRem)
          EA_Point += 1;
 
-      Print(__FUNCTION__,"#",__LINE__," EA_Point : ",EA_Point,"/",EA_AllowPoint," = ",EA_Point >= EA_AllowPoint);
+      Print(__FUNCTION__, "#", __LINE__, " EA_Point : ", EA_Point, "/", EA_AllowPoint, " = ", EA_Point >= EA_AllowPoint);
       return   EA_Point;
    }
    bool              IsEA_AllowAccount()
@@ -93,11 +93,11 @@ private:
       string   numm  = string(AccountNumber());
       Print("");
 
-      int   k  =  StringSplit(eaLOCK_Account,StringGetCharacter(",",0),Account);
+      int   k  =  StringSplit(eaLOCK_Account, StringGetCharacter(",", 0), Account);
       if(k > 0) {
 
-         Print(__FUNCTION__,"#",__LINE__," Account Allow : ",eaLOCK_Account);
-         Print(__FUNCTION__,"#",__LINE__," AccountNumber : ",numm);
+         Print(__FUNCTION__, "#", __LINE__, " Account Allow : ", eaLOCK_Account);
+         Print(__FUNCTION__, "#", __LINE__, " AccountNumber : ", numm);
 
          for(int i = 0; i < k; i++) {
             if(Account[i] == numm) {
@@ -107,7 +107,7 @@ private:
 
       } else {
          //--- k=0 :: Account free
-         Print(__FUNCTION__,"#",__LINE__," Account Allow : Unlimited");
+         Print(__FUNCTION__, "#", __LINE__, " Account Allow : Unlimited");
          return   true;
       }
       return   false;
@@ -117,13 +117,13 @@ private:
    {
       Print("");
       if(eaLOCK_Date == "") {
-         Print(__FUNCTION__,"#",__LINE__," Exprie : Unlimited");
+         Print(__FUNCTION__, "#", __LINE__, " Exprie : Unlimited");
          return   true;
       }
       datetime exprie   =  StringToTime(eaLOCK_Date);
       //TimeGMT();
-      Print(__FUNCTION__,"#",__LINE__," Exprie : ",exprie);
-      Print(__FUNCTION__,"#",__LINE__," TimeGMT : ",TimeGMT());
+      Print(__FUNCTION__, "#", __LINE__, " Exprie : ", exprie);
+      Print(__FUNCTION__, "#", __LINE__, " TimeGMT : ", TimeGMT());
 
       EA_AllowDate   =  TimeGMT() < exprie;
       return   EA_AllowDate;
@@ -132,5 +132,5 @@ private:
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-CProductLock   ProduckLock();
+CProductLock ProduckLock  =  new CProductLock;
 //+------------------------------------------------------------------+

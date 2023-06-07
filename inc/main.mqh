@@ -210,20 +210,22 @@ bool  OrderModifys_Profit(int  OP, int  cnt)
    double   __TP_New = -1;
 
    double   _Profit_TP_Point = double(__Profit_TP_Point);
-   if(eaIsTP_DivByCnt) {
-      double   Rate = 0.5;
-      double   Div = MathPow(Rate, cnt - 1);
-      _Profit_TP_Point = double(_Profit_TP_Point) * Div;
-   }
-
-   Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point: ", NormalizeDouble(_Profit_TP_Point, 0));
    {
-      if(_Profit_TP_Point <= 0) {
-         _Profit_TP_Point = 1;
-         Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point <= 0: ", _Profit_TP_Point);
+      if(eaIsTP_DivByCnt) {
+         double   Rate = exProfit_TP_PointReduceRate_CNT;
+         double   Div = MathPow(Rate, cnt - 1);
+         _Profit_TP_Point = double(_Profit_TP_Point) * Div;
       }
-      _Profit_TP_Point = _Profit_TP_Point * Point;
 
+      Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point: ", NormalizeDouble(_Profit_TP_Point, 0));
+      {
+         if(_Profit_TP_Point <= 0) {
+            _Profit_TP_Point = 1;
+            Print(__FUNCSIG__, __LINE__, "# ", "_Profit_TP_Point <= 0: ", _Profit_TP_Point);
+         }
+         _Profit_TP_Point = _Profit_TP_Point * Point;
+
+      }
    }
 
 

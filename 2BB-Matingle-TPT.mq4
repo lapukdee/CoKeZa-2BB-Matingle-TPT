@@ -35,8 +35,8 @@
 
 string   EA_Identity_Short = "2BB";
 enum ENUM_BB {
-   ENUM_BB_CloseClose,
-   ENUM_BB_HighLow,
+   ENUM_BB_CloseClose,  //Close Close
+   ENUM_BB_HighLow,     //High Low
 };
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -84,13 +84,12 @@ extern   int               exProfit_Tail_Step_P    = 33;       //• Step | % : 
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-extern   bool  eaOrder_InsertMode   =  true;    //• eaOrder_InsertMode  #true  |  false: Old (All tick)
 extern   bool  eaIsTP_DivByCnt      =  true;    //• eaIsTP_DivByCnt  #false
 
 extern   bool  eaOrder_LotStartByBalance  =  true; //• eaOrder_LotStartByBalance  #false
 extern   double               eaCapital   =  50;   //• eaCapital
 
-extern   double   exProfit_TP_PointReduceRate   =  0.5;   //• TP PointReduceRate
+extern   double   exProfit_TP_PointReduceRate_CNT   =  0.5;   //• TP PointReduceRate By CNT
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -99,6 +98,15 @@ int OnInit()
    {
       __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
       Tailing.SetValue(__Profit_TP_Point);
+
+      double   VOLUME_MIN = SymbolInfoDouble(NULL, SYMBOL_VOLUME_MIN);
+      if(exOrder_LotStart < VOLUME_MIN) {
+         Print(__FUNCSIG__, __LINE__, "#", " VOLUME_MIN:", VOLUME_MIN);
+         Print(__FUNCSIG__, __LINE__, "#", " exOrder_LotStart:", exOrder_LotStart);
+
+         Print(__LINE__, "$$ exOrder_LotStart < VOLUME_MIN");
+         ExpertRemove();
+      }
    }
 //---
    {
@@ -130,8 +138,12 @@ struct sPortHold {
    int               Cnt;
    double            Value;
 
-   bool              PortIsHave_TP;
+
    double            PortSL_Price;
+
+   int               State;         // 0: Start/Normal,  1: TialingRuner
+   bool              FoceModify;
+   //---
 
    void              Clear()
    {
@@ -139,20 +151,21 @@ struct sPortHold {
       Cnt = -1;
       Value = -1;
 
-      PortIsHave_TP = false;
-      PortSL_Price = -1;
+      PortSL_Price   =  false;
+      State          =  -1;
+      FoceModify     =  false;
    }
 };
-sPortHold   PortHold = {-1, -1, -1, false, -1};
+sPortHold   PortHold;
 //
-struct sTP_MM {
-   double            Tail_Price;
-   void              Clear()
-   {
-      Tail_Price = -1;
-   }
-};
-sTP_MM TP_MM = {-1};
+//struct sTP_MM {
+//   double            Tail_Price;
+//   void              Clear()
+//   {
+//      Tail_Price = -1;
+//   }
+//};
+//sTP_MM TP_MM = {-1};
 //+-----------------,-------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -165,8 +178,9 @@ void  Hold_Mapping()
       PortHold.Cnt            = Port.cnt_Buy;
       PortHold.Value          = Port.sumHold_Buy;
 
-      PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Buy.IsResult;
-      PortHold.PortSL_Price   = Port.PortIsHaveTP_Buy.Price;
+      PortHold.PortSL_Price   =  Port.TPT_Buy.Price_SL;
+      PortHold.State          =  Port.TPT_Buy.State;
+      PortHold.FoceModify     =  Port.TPT_Buy.FoceModify;
 
    }
    if(Port.cnt_Sel > 0) {
@@ -174,8 +188,9 @@ void  Hold_Mapping()
       PortHold.Cnt            = Port.cnt_Sel;
       PortHold.Value          = Port.sumHold_Sel;
 
-      PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Sell.IsResult;
-      PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
+      PortHold.PortSL_Price   =  Port.TPT_Sell.Price_SL;
+      PortHold.State          =  Port.TPT_Sell.State;
+      PortHold.FoceModify     =  Port.TPT_Sell.FoceModify;
 
    }
 }
@@ -206,7 +221,6 @@ void OnTick()
 
             /* SendOrder */
             if(OrderSend_Active(Chart.EventBreak_R, 0)) {
-               Port.Calculator();
 
                __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
                //Fiexd TP Point
@@ -225,44 +239,39 @@ void OnTick()
 
       Print("IsNewBar_Insert()");
       //---    feature/feature_OrderInsert-UseLowHigh
-      if(eaOrder_InsertMode) {
-         Print("eaOrder_InsertMode");
 
-         if(PortHold.OP != -1  &&
-            PortHold.Value < 0) {
-            Print("eaOrder_InsertMode@Inside");
+      if(PortHold.OP != -1  &&
+         PortHold.Value < 0) {
+         Print("eaOrder_InsertMode@Inside");
 
-            int   Point_Distance = -1;
+         int   Point_Distance = -1;
 
-            if(PortHold.OP == OP_BUY) {
-               Point_Distance = int((iLow(NULL, exOrder_InsertTF, 0) - Port.ActivePlace_BOT) / Point); //Buy : Low -  Bot
-            } else {
-               Point_Distance = int((Port.ActivePlace_TOP - iHigh(NULL, exOrder_InsertTF, 0)) / Point); //Sell : Top - High
-            }
+         if(PortHold.OP == OP_BUY) {
+            Point_Distance = int((iLow(NULL, exOrder_InsertTF, 0) - Port.ActivePlace_BOT) / Point); //Buy : Low -  Bot
+         } else {
+            Point_Distance = int((Port.ActivePlace_TOP - iHigh(NULL, exOrder_InsertTF, 0)) / Point); //Sell : Top - High
+         }
 
-            bool  IsDetectDistance =  Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
-            if(IsDetectDistance) {
+         bool  IsDetectDistance =  Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
+         if(IsDetectDistance) {
 
-               if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
-                  Port.Calculator();
-                  {
-                     Hold_Mapping();
-                  }
-                  {
-                     // Fiexd TP Point
-                     OrderModifys_Profit(PortHold.OP, PortHold.Cnt);
-                  }
-                  {
-                     OrderModifys_SL(PortHold.OP);
-                  }
-                  //---
-
-
+            if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
+               {
+                  // Fiexd TP Point
+                  __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
+                  OrderModifys_Profit(PortHold.OP, PortHold.Cnt);
                }
+               {
+                  OrderModifys_SL(PortHold.OP);
+               }
+               //---
+
 
             }
+
          }
       }
+
       //---
    } else {
 
@@ -273,36 +282,11 @@ void OnTick()
 
          if(PortHold.Value < 0) {
             //--- Port Negtive
-            if(!eaOrder_InsertMode) {
-               Print(__FUNCSIG__, __LINE__, "# ", "Port Negtive");
-
-               bool  IsDetectDistance = Port.Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
-
-               if(IsDetectDistance) {
-
-                  if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
-                     OrderModifys_SL(PortHold.OP);
-                  }
-
-               }
-            }
-            //---
          } else {
             if(exProfit_Tail) {
 
                //--- Port Positive
-               //Print(__FUNCSIG__, __LINE__, "# ", "Port Positive");
-
-               /* ##Thongeak ##TPtailing */
-
-               /* Detect TakeProfit */
-
-               /* if Order Avg is + action same SL by Start Sl Price at Cap Price
-                  Funtion Modufy Group
-               */
-               //Print(__FUNCSIG__, __LINE__, "# ", "PortHold.PortIsHave_TP: ", PortHold.PortIsHave_TP);
-
-               if(PortHold.PortIsHave_TP) {
+               if(!PortHold.FoceModify) {
                   int   Distance = -1;
                   //Print(__FUNCSIG__, __LINE__, "# ", "PortHold.OP: ", PortHold.OP);
                   if(PortHold.OP == OP_BUY) {
@@ -316,12 +300,15 @@ void OnTick()
                      //Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                   }
 
-                  int   Distance_Test  =  ( PortHold.Cnt  == 1) ? Tailing.Tail_Start : Tailing.Tail_Point + Tailing.Tail_Step;
+                  int   Distance_Test  =  (PortHold.State  == 0) ?
+                                          Tailing.Tail_Start :
+                                          Tailing.Tail_Point + Tailing.Tail_Step;
+
                   //Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
 
                   if(Distance >= Distance_Test) {
                      //--- >> Order Modify Group
-                     OrderModifys_SL(PortHold.OP, PortHold.PortSL_Price);
+                     OrderModifys_SL(PortHold.OP);
                   }
                } else {
                   OrderModifys_SL(PortHold.OP);
@@ -355,17 +342,19 @@ void OnTick()
    C += "A.PR.TOP" + ": " + Port.ActivePlace_TOP + "\n";
    C += "A.PR.BOT" + ": " + Port.ActivePlace_BOT + "\n";
 
-   C += "A.P.TOP" + ": " + Port.ActivePoint_TOP + "\n";
-   C += "A.P.BOT" + ": " + Port.ActivePoint_BOT + "\n";
+//C += "A.P.TOP" + ": " + Port.ActivePoint_TOP + "\n";
+//C += "A.P.BOT" + ": " + Port.ActivePoint_BOT + "\n";
    C += "Distance" + ": " + Port.Point_Distance + "\n";
    C += "\n";
 
 //C += "Hold.PortSL_Price" + ": " + PortHold.PortSL_Price + "\n";
    C += "__Profit_TP_Point" + ": " + __Profit_TP_Point + "\n";
-   C += "BarS_Insert" + ": " + cIsNewBar_Save_Insert + "\n";
+//C += "BarS_Insert" + ": " + cIsNewBar_Save_Insert + "\n";
 
    C += "\n";
-
+   C += "PortSL_Price" + ": " + PortHold.PortSL_Price + "\n";
+   C += "State" + ": " + PortHold.State + "\n";
+   C += "FoceModify" + ": " + PortHold.FoceModify + "\n";
 
    Comment(C);
 }
