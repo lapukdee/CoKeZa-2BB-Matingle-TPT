@@ -69,21 +69,35 @@ int   BBand_EventBreak()
       Print(__LINE__, "# ", "_Close: ",  _Close);
       Print(__LINE__, "# ", "__Open: ",  __Open);
 
+      double _High = (exBB_PriceTest == ENUM_BB_CloseClose) ?
+                     _Close :
+                     NormalizeDouble(iHigh(NULL, exBB_TF, Global.RoomFocus), Digits);
+      double _Low  = (exBB_PriceTest == ENUM_BB_CloseClose) ?
+                     _Close :
+                     NormalizeDouble(iLow(NULL, exBB_TF, Global.RoomFocus), Digits);
+
       Chart.EventBreak_R = -1;
       Chart.EventBreak_A = -1;
       Chart.EventBreak_B = -1;
 
       {
+         int   BAR_TYPE = -1;
+         {
+            if(__Open < _Close)
+               BAR_TYPE = OP_BUY;
+            if(__Open > _Close)
+               BAR_TYPE = OP_SELL;
+         }
          {
             bool IsStand_A = true;
 
             if(IsStand_A) {
                Print(__LINE__, "# ");
-               if(_Close > BBand_A[0][MODE_UPPER] && _Close > BBand_A[0][MODE_MAIN]) {
+               if(_High > BBand_A[0][MODE_UPPER] && _Close > BBand_A[0][MODE_MAIN] && BAR_TYPE == OP_BUY) {
                   Chart.EventBreak_A = OP_SELL;
                   Print(__LINE__, "# ");
                }
-               if(_Close < BBand_A[0][MODE_LOWER] && _Close < BBand_A[0][MODE_MAIN]) {
+               if(_Low < BBand_A[0][MODE_LOWER] && _Close < BBand_A[0][MODE_MAIN] && BAR_TYPE == OP_SELL ) {
                   Chart.EventBreak_A = OP_BUY;
                   Print(__LINE__, "# ");
                }
@@ -95,11 +109,11 @@ int   BBand_EventBreak()
 
             if(IsStand_B) {
                Print(__LINE__, "# ");
-               if(_Close > BBand_B[0][MODE_UPPER] && _Close > BBand_B[0][MODE_MAIN]) {
+               if(_High > BBand_B[0][MODE_UPPER] && _Close > BBand_B[0][MODE_MAIN] && BAR_TYPE == OP_BUY) {
                   Chart.EventBreak_B = OP_SELL;
                   Print(__LINE__, "# ");
                }
-               if(_Close < BBand_B[0][MODE_LOWER] && _Close < BBand_B[0][MODE_MAIN]) {
+               if(_Low < BBand_B[0][MODE_LOWER] && _Close < BBand_B[0][MODE_MAIN] && BAR_TYPE == OP_SELL) {
                   Chart.EventBreak_B = OP_BUY;
                   Print(__LINE__, "# ");
                }

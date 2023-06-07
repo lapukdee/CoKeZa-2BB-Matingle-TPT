@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.4e"
+#define     ea_version     "1.41e"
 #property   version        ea_version
 
 #property strict
@@ -34,7 +34,10 @@
 #property   description    "Expire Date : "+eaLOCK_Date
 
 string   EA_Identity_Short = "2BB";
-
+enum ENUM_BB {
+   ENUM_BB_CloseClose,
+   ENUM_BB_HighLow,
+};
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -53,6 +56,7 @@ extern   ENUM_APPLIED_PRICE   exBB_Applied_price_B    = PRICE_CLOSE;     //• B
 extern   double               exBB_Deviation_A        = 2;               //• A - Deviations
 extern   double               exBB_Deviation_B        = 2;               //• B - Deviations
 extern   int                  exBB_BandsShift         = 0;               //• Bands Shift
+extern   ENUM_BB              exBB_PriceTest          = ENUM_BB_HighLow;   //• Bar Test
 
 extern   string            exOrder        = " --------------- Martingale --------------- ";  // --------------------------------------------------
 extern   double            exOrder_LotStart        = 0.01;  //• Lot - Start
