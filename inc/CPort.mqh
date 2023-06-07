@@ -68,6 +68,7 @@ public:
 
       int            State;         // 0: Start/Normal,  1: TialingRuner
       bool           FoceModify;
+      double         Price_SL;
 
       void           Clear()
       {
@@ -133,11 +134,11 @@ public:
 
                         if(cnt_Buy == 1) {
                            TPT_Buy.Price_Runner_ = _OrderStopLoss;
-                           TPT_Buy.Counter_Standby++;
+                           TPT_Buy.Counter_Runner_++;
                         }
                         if(cnt_Buy >= 2 && TPT_Buy.Eq_Runner_)  {
                            if(TPT_Buy.Price_Runner_ == _OrderStopLoss) {
-                              TPT_Buy.Counter_Standby++;
+                              TPT_Buy.Counter_Runner_++;
                            } else {
                               TPT_Buy.Eq_Runner_   =  false;
                            }
@@ -176,11 +177,11 @@ public:
 
                         if(cnt_Sel == 1) {
                            TPT_Sell.Price_Runner_ = _OrderStopLoss;
-                           TPT_Sell.Counter_Standby++;
+                           TPT_Sell.Counter_Runner_++;
                         }
                         if(cnt_Sel >= 2 && TPT_Sell.Eq_Runner_)  {
                            if(TPT_Sell.Price_Runner_ == _OrderStopLoss) {
-                              TPT_Sell.Counter_Standby++;
+                              TPT_Sell.Counter_Runner_++;
                            } else {
                               TPT_Sell.Eq_Runner_   =  false;
                            }
@@ -276,7 +277,8 @@ public:
                   if(cnt_Buy == TPT_Buy.Counter_Standby &&
                      TPT_Buy.Counter_Runner_ == 0 ) {
 
-                     TPT_Buy.Price_Standby = sumProd_Buy;
+                     TPT_Buy.State  =  0;
+                     TPT_Buy.Price_SL = sumProd_Buy;
                      TPT_Buy.Eq_Standby    =  true;
 
 
@@ -284,13 +286,19 @@ public:
                   if(cnt_Buy == TPT_Buy.Counter_Runner_ &&
                      TPT_Buy.Counter_Standby == 0 ) {
 
+                     TPT_Buy.State  =  1;
+                     TPT_Buy.Price_SL =  TPT_Buy.Price_Runner_;
+
                      if(TPT_Buy.Eq_Runner_ == false) {
                         TPT_Buy.FoceModify = true;
                      }
 
                   }
 
-                  TPT_Buy.FoceModify = true;
+                  if(cnt_Buy > 0 && TPT_Buy.Counter_Standby > 0 && TPT_Buy.Counter_Runner_ > 0) {
+                     TPT_Buy.FoceModify = true;
+                  }
+
                }
             }
             {/* Sell */
@@ -299,13 +307,16 @@ public:
                   if(cnt_Sel == TPT_Sell.Counter_Standby &&
                      TPT_Sell.Counter_Runner_ == 0 ) {
 
-                     TPT_Sell.Price_Standby = sumProd_Sel;
+                     TPT_Sell.State    =  0;
+                     TPT_Sell.Price_SL = sumProd_Sel;
                      TPT_Sell.Eq_Standby    =  true;
-
 
                   }
                   if(cnt_Sel == TPT_Sell.Counter_Runner_ &&
                      TPT_Sell.Counter_Standby == 0 ) {
+
+                     TPT_Sell.State  =  1;
+                     TPT_Sell.Price_SL =  TPT_Sell.Price_Runner_;
 
                      if(TPT_Sell.Eq_Runner_ == false) {
                         TPT_Sell.FoceModify = true;
@@ -313,7 +324,9 @@ public:
 
                   }
 
-                  TPT_Sell.FoceModify = true;
+                  if(cnt_Sel > 0 && TPT_Sell.Counter_Standby > 0 && TPT_Sell.Counter_Runner_ > 0) {
+                     TPT_Sell.FoceModify = true;
+                  }
                }
             }
 

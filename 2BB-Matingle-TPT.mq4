@@ -95,11 +95,11 @@ int OnInit()
 {
    {
 
-      if(exProfit_Tail_Point < exProfit_Tail_Start) {
+      if(exProfit_Tail_Point > exProfit_Tail_Start) {
          Print(__FUNCSIG__, __LINE__, "#", " exProfit_Tail_Point:", exProfit_Tail_Point);
          Print(__FUNCSIG__, __LINE__, "#", " exProfit_Tail_Start:", exProfit_Tail_Start);
 
-         Print(__LINE__, "$$ exProfit_Tail_Point <= exProfit_Tail_Start");
+         Print(__LINE__, "$$ exProfit_Tail_Point > exProfit_Tail_Start");
          ExpertRemove();
       }
 
@@ -145,8 +145,11 @@ struct sPortHold {
    int               Cnt;
    double            Value;
 
-   bool              PortIsHave_TP;
    double            PortSL_Price;
+
+   int               State;         // 0: Start/Normal,  1: TialingRuner
+   bool              FoceModify;
+   //---
 
    void              Clear()
    {
@@ -154,11 +157,14 @@ struct sPortHold {
       Cnt = -1;
       Value = -1;
 
-      PortIsHave_TP = false;
-      PortSL_Price = -1;
+      PortSL_Price   =  false;
+      State          =  -1;
+      FoceModify     =  false;
    }
 };
-sPortHold   PortHold = {-1, -1, -1, false, -1};
+sPortHold   PortHold;
+
+
 //
 struct sTP_MM {
    double            Tail_Price;
@@ -180,8 +186,9 @@ void  Hold_Mapping()
       PortHold.Cnt            = Port.cnt_Buy;
       PortHold.Value          = Port.sumHold_Buy;
 
-      //PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Buy.IsResult;
-      //PortHold.PortSL_Price   = Port.PortIsHaveTP_Buy.Price;
+      PortHold.PortSL_Price   =  Port.TPT_Buy.Price_SL;
+      PortHold.State          =  Port.TPT_Buy.State;
+      PortHold.FoceModify     =  Port.TPT_Buy.FoceModify;
 
    }
    if(Port.cnt_Sel > 0) {
@@ -189,8 +196,9 @@ void  Hold_Mapping()
       PortHold.Cnt            = Port.cnt_Sel;
       PortHold.Value          = Port.sumHold_Sel;
 
-      //PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Sell.IsResult;
-      //PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
+      PortHold.PortSL_Price   =  Port.TPT_Sell.Price_SL;
+      PortHold.State          =  Port.TPT_Sell.State;
+      PortHold.FoceModify     =  Port.TPT_Sell.FoceModify;
 
    }
 }
@@ -333,7 +341,7 @@ void OnTick()
                */
                //Print(__FUNCSIG__, __LINE__, "# ", "PortHold.PortIsHave_TP: ", PortHold.PortIsHave_TP);
 
-               if(PortHold.PortIsHave_TP) {
+               if(!PortHold.FoceModify) {
                   int   Distance = -1;
                   //Print(__FUNCSIG__, __LINE__, "# ", "PortHold.OP: ", PortHold.OP);
                   if(PortHold.OP == OP_BUY) {
@@ -347,10 +355,10 @@ void OnTick()
                      //Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                   }
 
-                  int   Distance_Test  =  (PortHold.Cnt  == 1) ?
+                  int   Distance_Test  =  (PortHold.State  == 0) ?
                                           exProfit_Tail_Start :
                                           exProfit_Tail_Point + exProfit_Tail_Step;
-                                          
+
                   //Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
 
                   if(Distance >= Distance_Test) {
@@ -392,6 +400,11 @@ void OnTick()
    C += "A.P.TOP" + ": " + Port.ActivePoint_TOP + "\n";
    C += "A.P.BOT" + ": " + Port.ActivePoint_BOT + "\n";
    C += "Distance" + ": " + Port.Point_Distance + "\n";
+   C += "\n";
+
+   C += "PortSL_Price" + ": " + PortHold.PortSL_Price + "\n";
+   C += "State" + ": " + PortHold.State + "\n";
+   C += "FoceModify" + ": " + PortHold.FoceModify + "\n";
 
    C += "\n";
 
