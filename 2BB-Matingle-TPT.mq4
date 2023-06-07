@@ -8,7 +8,7 @@
    ""                      => Account not locked
 
 */
-#define     eaLOCK_Date    "10.6.2023"
+#define     eaLOCK_Date    "17.6.2023"
 /*
    - Compared to the center time +0
    #Example.
@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.30"
+#define     ea_version     "1.32"
 #property   version        ea_version
 
 #property strict
@@ -45,12 +45,12 @@ extern   int               exMagicnumber  =  2852023;                //• Magic
 
 extern   string            exBB        = " --------------- BB-Band Signal --------------- ";   // --------------------------------------------------
 
-extern   ENUM_TIMEFRAMES   exBB_TF              = PERIOD_H1;            //• Timeframe
-extern   int               exBB_A_Period        = 20;                   //• A - Period
-extern   int               exBB_B_Period        = 30;                   //• B - Period
-extern   int               exBB_Applied_price   = PRICE_CLOSE;          //• Applied price
-extern   double            exBB_Deviation       = 2;                    //• Standard Deviations
-extern   int               exBB_BandsShift      = 0;                    //• Bands Shift
+extern   ENUM_TIMEFRAMES      exBB_TF              = PERIOD_H1;            //• Timeframe
+extern   int                  exBB_A_Period        = 20;                   //• A - Period
+extern   int                  exBB_B_Period        = 30;                   //• B - Period
+extern   ENUM_APPLIED_PRICE   exBB_Applied_price   = PRICE_CLOSE;          //• Applied price
+extern   double               exBB_Deviation       = 2;                    //• Standard Deviations
+extern   int                  exBB_BandsShift      = 0;                    //• Bands Shift
 
 extern   string            exOrder        = " --------------- Martingale --------------- ";   // --------------------------------------------------
 extern   double            exOrder_LotStart        = 0.01;  //• Lot - Start
@@ -63,8 +63,8 @@ extern   bool              exProfit_TP          = true;     // --------------- T
 extern   int               exProfit_TP_Point    = 300;      //• Order TP (Point)
 
 extern   bool              exProfit_Tail        = true;     // --------------- Tailing ---------------
-extern   int               exProfit_Tail_Point  = 250;      //• Tailing (Point)
-extern   int               exProfit_Tail_Start  = 200;      //• Start (Point)
+extern   int               exProfit_Tail_Point  = 200;      //• Tailing (Point)
+extern   int               exProfit_Tail_Start  = 250;      //• Start (Point)
 extern   int               exProfit_Tail_Step   = 75;       //• Step (Point)
 
 extern   string            exCapital         = " --------------- Capital and Cut --------------- ";   // --------------------------------------------------
@@ -94,7 +94,22 @@ bool  eaOrder_LotStartByBalance  =  false; //• eaOrder_LotStartByBalance  #fal
 int OnInit()
 {
    {
-      if(exProfit_TP_Point <= exProfit_Tail_Start) {
+
+      if(exProfit_Tail_Point > exProfit_Tail_Start) {
+         Print(__FUNCSIG__, __LINE__, "#", " exProfit_Tail_Point:", exProfit_Tail_Point);
+         Print(__FUNCSIG__, __LINE__, "#", " exProfit_Tail_Start:", exProfit_Tail_Start);
+
+         Print(__LINE__, "$$ exProfit_Tail_Point > exProfit_Tail_Start");
+         ExpertRemove();
+      }
+
+      double   VOLUME_MIN = SymbolInfoDouble(NULL, SYMBOL_VOLUME_MIN);
+
+      if(exOrder_LotStart < VOLUME_MIN) {
+         Print(__FUNCSIG__, __LINE__, "#", " VOLUME_MIN:", VOLUME_MIN);
+         Print(__FUNCSIG__, __LINE__, "#", " exOrder_LotStart:", exOrder_LotStart);
+
+         Print(__LINE__, "$$ exOrder_LotStart < VOLUME_MIN");
          ExpertRemove();
       }
       //if(exProfit_Tail_Point <= exProfit_Tail_Start) {
@@ -121,7 +136,6 @@ int OnInit()
 void OnDeinit(const int reason)
 {
 //---
-
 }
 //+------------------------------------------------------------------+
 //| Expert tick function                                             |
@@ -131,8 +145,11 @@ struct sPortHold {
    int               Cnt;
    double            Value;
 
-   bool              PortIsHave_TP;
    double            PortSL_Price;
+
+   int               State;         // 0: Start/Normal,  1: TialingRuner
+   bool              FoceModify;
+   //---
 
    void              Clear()
    {
@@ -140,11 +157,14 @@ struct sPortHold {
       Cnt = -1;
       Value = -1;
 
-      PortIsHave_TP = false;
-      PortSL_Price = -1;
+      PortSL_Price   =  false;
+      State          =  -1;
+      FoceModify     =  false;
    }
 };
-sPortHold   PortHold = {-1, -1, -1, false, -1};
+sPortHold   PortHold;
+
+
 //
 struct sTP_MM {
    double            Tail_Price;
@@ -166,8 +186,9 @@ void  Hold_Mapping()
       PortHold.Cnt            = Port.cnt_Buy;
       PortHold.Value          = Port.sumHold_Buy;
 
-      PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Buy.IsResult;
-      PortHold.PortSL_Price   = Port.PortIsHaveTP_Buy.Price;
+      PortHold.PortSL_Price   =  Port.TPT_Buy.Price_SL;
+      PortHold.State          =  Port.TPT_Buy.State;
+      PortHold.FoceModify     =  Port.TPT_Buy.FoceModify;
 
    }
    if(Port.cnt_Sel > 0) {
@@ -175,8 +196,9 @@ void  Hold_Mapping()
       PortHold.Cnt            = Port.cnt_Sel;
       PortHold.Value          = Port.sumHold_Sel;
 
-      PortHold.PortIsHave_TP  = Port.PortIsHaveTP_Sell.IsResult;
-      PortHold.PortSL_Price   = Port.PortIsHaveTP_Sell.Price;
+      PortHold.PortSL_Price   =  Port.TPT_Sell.Price_SL;
+      PortHold.State          =  Port.TPT_Sell.State;
+      PortHold.FoceModify     =  Port.TPT_Sell.FoceModify;
 
    }
 }
@@ -319,7 +341,7 @@ void OnTick()
                */
                //Print(__FUNCSIG__, __LINE__, "# ", "PortHold.PortIsHave_TP: ", PortHold.PortIsHave_TP);
 
-               if(PortHold.PortIsHave_TP) {
+               if(!PortHold.FoceModify) {
                   int   Distance = -1;
                   //Print(__FUNCSIG__, __LINE__, "# ", "PortHold.OP: ", PortHold.OP);
                   if(PortHold.OP == OP_BUY) {
@@ -333,7 +355,10 @@ void OnTick()
                      //Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                   }
 
-                  int   Distance_Test  =  ( PortHold.Cnt  == 1) ? exProfit_Tail_Start : exProfit_Tail_Point + exProfit_Tail_Step;
+                  int   Distance_Test  =  (PortHold.State  == 0) ?
+                                          exProfit_Tail_Start :
+                                          exProfit_Tail_Point + exProfit_Tail_Step;
+
                   //Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
 
                   if(Distance >= Distance_Test) {
@@ -375,6 +400,11 @@ void OnTick()
    C += "A.P.TOP" + ": " + Port.ActivePoint_TOP + "\n";
    C += "A.P.BOT" + ": " + Port.ActivePoint_BOT + "\n";
    C += "Distance" + ": " + Port.Point_Distance + "\n";
+   C += "\n";
+
+   C += "PortSL_Price" + ": " + PortHold.PortSL_Price + "\n";
+   C += "State" + ": " + PortHold.State + "\n";
+   C += "FoceModify" + ": " + PortHold.FoceModify + "\n";
 
    C += "\n";
 
