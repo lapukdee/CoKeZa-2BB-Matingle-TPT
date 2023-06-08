@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.41e"
+#define     ea_version     "1.43e"
 #property   version        ea_version
 
 #property strict
@@ -96,8 +96,8 @@ extern   double   exProfit_TP_PointReduceRate_CNT   =  0.5;   //• TP PointRedu
 int OnInit()
 {
    {
-      __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
-      Tailing.SetValue(__Profit_TP_Point);
+      //__Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
+      //Tailing.SetValue(__Profit_TP_Point);
 
       double   VOLUME_MIN = SymbolInfoDouble(NULL, SYMBOL_VOLUME_MIN);
       if(exOrder_LotStart < VOLUME_MIN) {
@@ -137,7 +137,7 @@ struct sPortHold {
    int               OP;
    int               Cnt;
    double            Value;
-
+   double            Product;
 
    double            PortSL_Price;
 
@@ -147,9 +147,10 @@ struct sPortHold {
 
    void              Clear()
    {
-      OP = -1;
-      Cnt = -1;
-      Value = -1;
+      OP       = -1;
+      Cnt      = -1;
+      Value    = -1;
+      Product  =  -1;
 
       PortSL_Price   =  false;
       State          =  -1;
@@ -177,6 +178,7 @@ void  Hold_Mapping()
       PortHold.OP             = OP_BUY;
       PortHold.Cnt            = Port.cnt_Buy;
       PortHold.Value          = Port.sumHold_Buy;
+      PortHold.Product        =  Port.sumProd_Buy;
 
       PortHold.PortSL_Price   =  Port.TPT_Buy.Price_SL;
       PortHold.State          =  Port.TPT_Buy.State;
@@ -187,6 +189,7 @@ void  Hold_Mapping()
       PortHold.OP             = OP_SELL;
       PortHold.Cnt            = Port.cnt_Sel;
       PortHold.Value          = Port.sumHold_Sel;
+      PortHold.Product        =  Port.sumProd_Sel;
 
       PortHold.PortSL_Price   =  Port.TPT_Sell.Price_SL;
       PortHold.State          =  Port.TPT_Sell.State;
@@ -222,15 +225,15 @@ void OnTick()
             /* SendOrder */
             if(OrderSend_Active(Chart.EventBreak_R, 0)) {
 
-               __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
+               __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
+                                                     PortHold.Product);
+               Tailing.SetValue(__Profit_TP_Point);
                //Fiexd TP Point
                OrderModifys_Profit(Chart.EventBreak_R, 1);
 
             }
 
          }
-
-      } else {
 
       }
 
@@ -258,7 +261,10 @@ void OnTick()
             if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
                {
                   // Fiexd TP Point
-                  __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
+                  __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
+                                                        PortHold.Product);
+                  Tailing.SetValue(__Profit_TP_Point);
+
                   OrderModifys_Profit(PortHold.OP, PortHold.Cnt);
                }
                {
@@ -270,6 +276,20 @@ void OnTick()
             }
 
          }
+
+
+         {
+            {
+               // Fiexd TP Point
+               __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
+                                                     PortHold.Product);
+               Tailing.SetValue(__Profit_TP_Point);
+
+               OrderModifys_Profit(PortHold.OP, PortHold.Cnt);
+            }
+         }
+         
+         
       }
 
       //---

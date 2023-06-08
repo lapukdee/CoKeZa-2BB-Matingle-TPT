@@ -184,13 +184,34 @@ bool              IsNewBar_Insert()
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-int  BBand_getBandSize(ENUM_TIMEFRAMES   timeframe, int vPeriod_, double  BB_Deviation, ENUM_APPLIED_PRICE BB_Applied_price)
+enum ENUM_BandSize {
+   ENUM_BandSize_BandMid,     //Band Mid
+   ENUM_BandSize_BidMid,      //Bid Mid
+   ENUM_BandSize_ProductMid,  //Product Mid
+};
+
+ENUM_BandSize  BandSize_Mode = ENUM_BandSize_ProductMid;
+//---
+int  BBand_getBandSize(ENUM_TIMEFRAMES   timeframe, int vPeriod_, double  BB_Deviation, ENUM_APPLIED_PRICE BB_Applied_price,
+                       double   PortHold_Product)
 {
    double BandSize[1][3];
    if(BBand_getValue(timeframe, vPeriod_, BB_Deviation, BB_Applied_price)) {
       int res = ArrayCopy(BandSize, BBand_getValue_Result);
 
-      double res_   =  (BandSize[0][MODE_UPPER] - BandSize[0][MODE_MAIN]) / Point;
+      double res_   =  -1;
+
+      if(BandSize_Mode == ENUM_BandSize_BandMid) {
+         res_   =  (BandSize[0][MODE_UPPER] - BandSize[0][MODE_MAIN]) / Point;
+      }
+
+      if(BandSize_Mode == ENUM_BandSize_BidMid) {
+         res_   =  MathAbs((Bid - BandSize[0][MODE_MAIN]) / Point);
+      }
+
+      if(BandSize_Mode == ENUM_BandSize_ProductMid) {
+         res_   =  MathAbs((PortHold_Product - BandSize[0][MODE_MAIN]) / Point);
+      }
 
       return  int(NormalizeDouble(res_, 0));
 
@@ -208,6 +229,7 @@ bool  OrderModifys_Profit(int  OP, int  cnt)
    Print(__FUNCSIG__, __LINE__, "# ", "OP: ", OP);
    Print(__FUNCSIG__, __LINE__, "# ", "cnt: ", cnt);
    double   __TP_New = -1;
+
 
    double   _Profit_TP_Point = double(__Profit_TP_Point);
    {
