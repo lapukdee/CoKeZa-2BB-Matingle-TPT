@@ -79,6 +79,7 @@ extern   int               exProfit_Tail_Step_P    = 33;       //• Step | % : 
 #include "inc/main.mqh"
 #include "inc/CPort.mqh"
 #include "inc/Profit_Tail.mqh"
+#include "inc/Profit_Endure.mqh"
 //---
 
 //+------------------------------------------------------------------+
@@ -288,8 +289,8 @@ void OnTick()
                OrderModifys_Profit(PortHold.OP, PortHold.Cnt);
             }
          }
-         
-         
+
+
       }
 
       //---

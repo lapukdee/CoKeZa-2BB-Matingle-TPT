@@ -59,7 +59,7 @@ public:
       ActivePoint_BOT = 0;
       //---
    }
-
+//---
    struct sTPT {
 
       int            Counter_Standby,  Counter_Runner_;
@@ -85,6 +85,16 @@ public:
    };
    sTPT              TPT_Buy;
    sTPT              TPT_Sell;
+//---
+
+   struct sOlder {
+      datetime       Frist;
+      datetime       Last;
+
+   };
+   sOlder              Older_Buy;
+   sOlder              Older_Sell;
+//---
 
    void              Calculator()
    {
