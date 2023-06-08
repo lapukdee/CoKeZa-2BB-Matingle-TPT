@@ -19,6 +19,7 @@ public:
    double               ActivePlace_TOP, ActivePlace_BOT;
    int                  ActivePoint_TOP, ActivePoint_BOT;
    //---
+   datetime             Older_Lasted;
 
                      CPort(void)
    {
@@ -58,6 +59,8 @@ public:
       ActivePoint_TOP = 0;
       ActivePoint_BOT = 0;
       //---
+
+      Older_Lasted = 0;
    }
 //---
    struct sTPT {
@@ -91,6 +94,11 @@ public:
       datetime       Frist;
       datetime       Last;
 
+      void           Clear()
+      {
+         Frist = 99999999999999999;
+         Last  = 0;
+      }
    };
    sOlder              Older_Buy;
    sOlder              Older_Sell;
@@ -105,6 +113,10 @@ public:
          {
             TPT_Buy.Clear();
             TPT_Sell.Clear();
+         }
+         {
+            Older_Buy.Clear();
+            Older_Sell.Clear();
          }
 
          int   __OrdersTotal   =  OrdersTotal();
@@ -163,7 +175,10 @@ public:
                      }
 
                   }
+                  {
 
+                     Older_Buy.Last = MathMax(Older_Buy.Last, OrderOpenTime());
+                  }
                }
 
 
@@ -206,6 +221,10 @@ public:
                         TPT_Sell.Counter_Standby++;
                      }
 
+                  }
+
+                  {
+                     Older_Sell.Last = MathMax(Older_Sell.Last, OrderOpenTime());
                   }
                }
 
@@ -341,6 +360,12 @@ public:
             }
 
          }
+
+         {
+
+            Older_Lasted = MathMax(Older_Buy.Last, Older_Sell.Last);
+
+         }
       }
    }
 private:
@@ -386,6 +411,9 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
       Print("OrderSend placed successfully");
 
    Port.Calculator();
+
+   Profit_Endure.Box_Maker(Port.Older_Lasted);
+
    return   true;
 }
 //+------------------------------------------------------------------+

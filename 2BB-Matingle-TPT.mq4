@@ -75,6 +75,9 @@ extern   int               exProfit_Tail_Point_P   = 33;      //• Tailing | % 
 extern   int               exProfit_Tail_Start_P   = 66;      //• Start | % : [Order TP (Point)]
 extern   int               exProfit_Tail_Step_P    = 33;       //• Step | % : [Order TP (Point)]
 
+extern   string            exProfit_Endure_        = " --------------- Profit Endure --------------- ";  // --------------------------------------------------
+extern   bool              exProfit_Endure         = true;
+
 //---
 #include "inc/main.mqh"
 #include "inc/CPort.mqh"
@@ -96,6 +99,9 @@ extern   double   exProfit_TP_PointReduceRate_CNT   =  0.5;   //• TP PointRedu
 //+------------------------------------------------------------------+
 int OnInit()
 {
+   {
+      Profit_Endure.Box_Maker(TimeCurrent());
+   }
    {
       //__Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
       //Tailing.SetValue(__Profit_TP_Point);
@@ -279,8 +285,9 @@ void OnTick()
          }
 
 
-         {
+         if(exProfit_Endure) {
             {
+
                // Fiexd TP Point
                __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
                                                      PortHold.Product);
