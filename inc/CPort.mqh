@@ -412,7 +412,7 @@ bool  OrderSend_Active(int OP_Commander, int CountOfHold)
 
    Port.Calculator();
 
-   Profit_Endure.Box_Maker(Port.Older_Lasted);
+   Profit_Endure.Season_Maker(Port.Older_Lasted);
 
    return   true;
 }

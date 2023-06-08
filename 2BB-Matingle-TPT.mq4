@@ -100,7 +100,7 @@ extern   double   exProfit_TP_PointReduceRate_CNT   =  0.5;   //• TP PointRedu
 int OnInit()
 {
    {
-      Profit_Endure.Box_Maker(TimeCurrent());
+      Profit_Endure.Season_Maker(TimeCurrent());
    }
    {
       //__Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
@@ -232,6 +232,8 @@ void OnTick()
             /* SendOrder */
             if(OrderSend_Active(Chart.EventBreak_R, 0)) {
 
+               Hold_Mapping();
+
                __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
                                                      PortHold.Product);
                Tailing.SetValue(__Profit_TP_Point);
@@ -267,6 +269,8 @@ void OnTick()
 
             if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
                {
+               
+                  Hold_Mapping();
                   // Fiexd TP Point
                   __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
                                                         PortHold.Product);
@@ -287,23 +291,28 @@ void OnTick()
 
          if(exProfit_Endure) {
             {
+               int   Season_Check = Profit_Endure.Season_Check();
+               if(Season_Check >= 0) {
 
-               // Fiexd TP Point
-               __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
-                                                     PortHold.Product);
-               Tailing.SetValue(__Profit_TP_Point);
+                  // Fiexd TP Point
+                  __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
+                                                        PortHold.Product);
+                  Tailing.SetValue(__Profit_TP_Point);
 
-               OrderModifys_Profit(PortHold.OP, PortHold.Cnt);
+                  if(OrderModifys_Profit(PortHold.OP, PortHold.Cnt)) {
+                     Profit_Endure.Season_Book(Season_Check);
+                  }
+               }
             }
          }
 
 
       }
 
-      //---
+//---
    } else {
 
-      //
+//
       if(PortHold.OP != -1) {
          /* Detect Distance */
          //Print(__FUNCSIG__, __LINE__, "#");
@@ -384,6 +393,9 @@ void OnTick()
    C += "State" + ": " + PortHold.State + "\n";
    C += "FoceModify" + ": " + PortHold.FoceModify + "\n";
 
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
    Comment(C);
 }
 //+------------------------------------------------------------------+

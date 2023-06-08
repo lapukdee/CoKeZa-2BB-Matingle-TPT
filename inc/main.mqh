@@ -190,7 +190,7 @@ enum ENUM_BandSize {
    ENUM_BandSize_ProductMid,  //Product Mid
 };
 
-ENUM_BandSize  BandSize_Mode = ENUM_BandSize_ProductMid;
+ENUM_BandSize  BandSize_Mode = ENUM_BandSize_BidMid;
 //---
 int  BBand_getBandSize(ENUM_TIMEFRAMES   timeframe, int vPeriod_, double  BB_Deviation, ENUM_APPLIED_PRICE BB_Applied_price,
                        double   PortHold_Product)
@@ -211,6 +211,13 @@ int  BBand_getBandSize(ENUM_TIMEFRAMES   timeframe, int vPeriod_, double  BB_Dev
 
       if(BandSize_Mode == ENUM_BandSize_ProductMid) {
          res_   =  MathAbs((PortHold_Product - BandSize[0][MODE_MAIN]) / Point);
+
+
+         Print(__FUNCSIG__, __LINE__, "# ", "PortHold_Product:* ",  Chart.EventBreak_R);
+         Print(__FUNCSIG__, __LINE__, "# ", "BandSize[0][MODE_MAIN]:* ",  BandSize[0][MODE_MAIN]);
+         Print(__FUNCSIG__, __LINE__, "# ", "res_:* ",  res_);
+
+
       }
 
       return  int(NormalizeDouble(res_, 0));
