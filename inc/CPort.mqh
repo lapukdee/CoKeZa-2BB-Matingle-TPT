@@ -499,12 +499,26 @@ bool  OrderModifys_SL(int  OP, double  PortSL_Price = -1)
 //+------------------------------------------------------------------+
 int   exOrder_InDistancePoint_Get(int  OrederCNT = 0)
 {
-   double   res   = exOrder_InDistancePoint;// * MathPow(1.15, OrederCNT);
-   return   int(res * -1);
+   double   res_   = exOrder_InDistancePoint;// * MathPow(1.15, OrederCNT);
+
+   if(exIn_BB) {
+
+      double BandSize[1][3];
+      if(BBand_getValue(exIn_BB_TF, exIn_Period, exIn_Deviation, exIn_Applied_price)) {
+         int res = ArrayCopy(BandSize, BBand_getValue_Result);
+
+         //double res_   =  -1;
+
+         if(exIn_PriceTest == ENUM_OrderInsertBB_MidBand) {
+            res_   =  (BandSize[0][MODE_UPPER] - BandSize[0][MODE_MAIN]) / Point;
+         }
+      }
+
+   }
+
+
+   return   int(res_ * -1);
 }
-//+------------------------------------------------------------------+
-
-
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+

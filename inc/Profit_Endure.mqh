@@ -1,6 +1,13 @@
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
+
+extern   double   exEndure_Rate     =  20;
+extern   double   exEndure_HourMax  =  6;
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
 class CProfit_Endure
 {
    enum eBOX {
@@ -18,7 +25,7 @@ public:
 
                      CProfit_Endure()
    {
-      Endure = 20;   //%
+      Endure = exEndure_Rate;   //%
    };
                     ~CProfit_Endure() {};
 
@@ -30,7 +37,7 @@ public:
       double   EndureNeg = NormalizeDouble((100 - Endure) / 100, 2);
 
 
-      datetime    temp     =   4 * 3600;
+      datetime    temp     =   datetime(exEndure_HourMax * 3600);
       datetime    DateLast = OrderDateLast + temp;
 
       for(int i = 0; i < 4; i++) {
@@ -40,7 +47,7 @@ public:
          Season[i][BOX_Time]  =  DateLast;
          Season[i][BOX_Stamp] = 0;
 
-         temp  =  temp * EndureNeg;
+         temp  =  datetime(temp * EndureNeg);
          DateLast += temp;
 
       }

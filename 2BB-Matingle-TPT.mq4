@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.43e"
+#define     ea_version     "1.5e"
 #property   version        ea_version
 
 #property strict
@@ -34,9 +34,15 @@
 #property   description    "Expire Date : "+eaLOCK_Date
 
 string   EA_Identity_Short = "2BB";
+
 enum ENUM_BB {
    ENUM_BB_CloseClose,  //Close Close
    ENUM_BB_HighLow,     //High Low
+};
+
+enum ENUM_OrderInsertBB {
+   ENUM_OrderInsertBB_MidBand,   //Mid Band
+   ENUM_OrderInsertBB_HighLow    //High Low
 };
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -45,6 +51,7 @@ extern   string            exEAname       =  "v" + string(ea_version);  //# 2BB-
 extern   string            exLOCK_Date    =  string(eaLOCK_Date);       //# Lock
 extern   string            exSetting      =  " --------------- Setting --------------- "; // --------------------------------------------------
 extern   int               exMagicnumber  =  2852023;                //• Magicnumber
+
 
 extern   string               exBB           =  " --------------- BBand Signal --------------- ";  // --------------------------------------------------
 
@@ -56,14 +63,36 @@ extern   ENUM_APPLIED_PRICE   exBB_Applied_price_B    = PRICE_CLOSE;     //• B
 extern   double               exBB_Deviation_A        = 2;               //• A - Deviations
 extern   double               exBB_Deviation_B        = 2;               //• B - Deviations
 extern   int                  exBB_BandsShift         = 0;               //• Bands Shift
-extern   ENUM_BB              exBB_PriceTest          = ENUM_BB_HighLow;   //• Bar Test
+extern   ENUM_BB              exBB_PriceTest          = ENUM_BB_CloseClose;   //• Bar Test
+
 
 extern   string            exOrder        = " --------------- Martingale --------------- ";  // --------------------------------------------------
-extern   double            exOrder_LotStart        = 0.01;  //• Lot - Start
-extern   double            exOrder_LotMulti        = 2;     //• Lot - Multi
-extern   int               exOrder_InDistancePoint = 300;   //• Distance of Order New (Point)
+extern   double            exOrder_LotStart        = 1;           //• Lot - Start
+extern   double            exOrder_LotMulti        = 2;              //• Lot - Multi
 
-extern   ENUM_TIMEFRAMES   exOrder_InsertTF        = PERIOD_M30;            //• Insert Timeframe
+extern   string               exIn_Distance              = " --------------- Insert Distance --------------- ";  // --------------------------------------------------
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+extern   int                  exOrder_InDistancePoint    = 500;                           //• Distance of Order New (Point)
+extern   string               exIn_Distance2             = " --------------------------------------------- ";           //• --------------- Auto ---------------
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+extern   bool                 exIn_BB                    = false;                          //• Distance of Order New (Auto BB)
+extern   ENUM_TIMEFRAMES      exIn_BB_TF                 = PERIOD_M30;                    //• Timeframe
+extern   int                  exIn_Period                = 200;                           //• Period
+extern   ENUM_APPLIED_PRICE   exIn_Applied_price         = PRICE_CLOSE;                   //• Applied
+extern   double               exIn_Deviation             = 0.5;                           //• Deviations
+//extern   int                  exIn_BandsShift       = 0;                                //• Bands Shift
+extern   ENUM_OrderInsertBB   exIn_PriceTest             = ENUM_OrderInsertBB_MidBand;    //• Bar Test
+
+
+extern   string            exOrder_InsertTF_       = " --------------- Insert Timeframe --------------- ";  // --------------------------------------------------
+extern   ENUM_TIMEFRAMES   exOrder_InsertTF        = PERIOD_H1;            //• Timeframe
+
 
 extern   string            exProfit             = " --------------- Profit ---------------  [auto by BB-A]";   // --------------------------------------------------
 
@@ -74,6 +103,7 @@ extern   bool              exProfit_Tail           = true;     // --------------
 extern   int               exProfit_Tail_Point_P   = 33;      //• Tailing | % : [Order TP (Point)]
 extern   int               exProfit_Tail_Start_P   = 66;      //• Start | % : [Order TP (Point)]
 extern   int               exProfit_Tail_Step_P    = 33;       //• Step | % : [Order TP (Point)]
+
 
 extern   string            exProfit_Endure_        = " --------------- Profit Endure --------------- ";  // --------------------------------------------------
 extern   bool              exProfit_Endure         = true;
@@ -93,7 +123,7 @@ extern   bool  eaIsTP_DivByCnt      =  true;    //• eaIsTP_DivByCnt  #false
 extern   bool  eaOrder_LotStartByBalance  =  true; //• eaOrder_LotStartByBalance  #false
 extern   double               eaCapital   =  50;   //• eaCapital
 
-extern   double   exProfit_TP_PointReduceRate_CNT   =  0.5;   //• TP PointReduceRate By CNT
+extern   double   exProfit_TP_PointReduceRate_CNT   =  1.5;   //• TP PointReduceRate By CNT
 //+------------------------------------------------------------------+
 //| Expert initialization function                                   |
 //+------------------------------------------------------------------+
@@ -259,17 +289,19 @@ void OnTick()
          int   Point_Distance = -1;
 
          if(PortHold.OP == OP_BUY) {
-            Point_Distance = int((iLow(NULL, exOrder_InsertTF, 0) - Port.ActivePlace_BOT) / Point); //Buy : Low -  Bot
+            int   l  = iLowest(NULL, exOrder_InsertTF, MODE_LOW, 3, 0);
+            Point_Distance = int((iLow(NULL, exOrder_InsertTF, l ) - Port.ActivePlace_BOT) / Point); //Buy : Low -  Bot
          } else {
-            Point_Distance = int((Port.ActivePlace_TOP - iHigh(NULL, exOrder_InsertTF, 0)) / Point); //Sell : Top - High
+            int   h = iHighest(NULL, exOrder_InsertTF, MODE_HIGH, 3, 0);
+            Point_Distance = int((Port.ActivePlace_TOP - iHigh(NULL, exOrder_InsertTF, h )) / Point); //Sell : Top - High
          }
 
-         bool  IsDetectDistance =  Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
+                          bool  IsDetectDistance =  Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
          if(IsDetectDistance) {
 
             if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
                {
-               
+
                   Hold_Mapping();
                   // Fiexd TP Point
                   __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
