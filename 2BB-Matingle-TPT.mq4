@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.5e"
+#define     ea_version     "1.51e"
 #property   version        ea_version
 
 #property strict
@@ -51,7 +51,6 @@ extern   string            exEAname       =  "v" + string(ea_version);  //# 2BB-
 extern   string            exLOCK_Date    =  string(eaLOCK_Date);       //# Lock
 extern   string            exSetting      =  " --------------- Setting --------------- "; // --------------------------------------------------
 extern   int               exMagicnumber  =  2852023;                //• Magicnumber
-
 
 extern   string               exBB           =  " --------------- BBand Signal --------------- ";  // --------------------------------------------------
 
@@ -129,9 +128,7 @@ extern   double   exProfit_TP_PointReduceRate_CNT   =  1.5;   //• TP PointRedu
 //+------------------------------------------------------------------+
 int OnInit()
 {
-   {
-      Profit_Endure.Season_Maker(TimeCurrent());
-   }
+
    {
       //__Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A);
       //Tailing.SetValue(__Profit_TP_Point);
@@ -154,7 +151,9 @@ int OnInit()
    BBand_EventBreak();
 
    Port.Calculator();
-
+   {
+      Profit_Endure.Season_Maker(Port.Older_Lasted);
+   }
    OnTick();
 //---
    return(INIT_SUCCEEDED);
@@ -296,7 +295,7 @@ void OnTick()
             Point_Distance = int((Port.ActivePlace_TOP - iHigh(NULL, exOrder_InsertTF, h )) / Point); //Sell : Top - High
          }
 
-                          bool  IsDetectDistance =  Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
+         bool  IsDetectDistance =  Point_Distance <= exOrder_InDistancePoint_Get(PortHold.Cnt);
          if(IsDetectDistance) {
 
             if(OrderSend_Active(PortHold.OP, PortHold.Cnt)) {
@@ -401,7 +400,7 @@ void OnTick()
 
    C += "Port.OP" + ": " + PortHold.OP + "\n";
    C += "Port.Cnt" + ": " + PortHold.Cnt + "\n";
-   C += "Port.Value" + ": " + PortHold.Value + "\n";
+   C += "Port.Value" + ": " + DoubleToStr(PortHold.Value, 2) + "\n";
 
    C += "Event_R" + ": " + Chart.EventBreak_R + "\n";
    C += "Event_A" + ":  " + Chart.EventBreak_A + "\n";
@@ -424,6 +423,10 @@ void OnTick()
    C += "PortSL_Price" + ": " + PortHold.PortSL_Price + "\n";
    C += "State" + ": " + PortHold.State + "\n";
    C += "FoceModify" + ": " + PortHold.FoceModify + "\n";
+   C += "\n";
+
+   C += Profit_Endure.Season_TextToComment();
+
 
 //+------------------------------------------------------------------+
 //|                                                                  |

@@ -79,6 +79,21 @@ public:
    {
       Season[room][BOX_Stamp] = 1;
    }
+
+   string            Season_TextToComment()
+   {
+      string   cmm = "Season-Table\n";
+
+      int   leng  =  ArraySize(Season) / 2;
+         cmm += TimeToStr(OrderDateLast, TIME_DATE | TIME_MINUTES) + " | Last ** \n";
+
+      for(int i = 0; i < leng; i++) {
+         cmm += TimeToStr(Season[i][BOX_Time], TIME_DATE | TIME_MINUTES) + " | " + bool(Season[i][BOX_Stamp]) + "\n";
+
+      }
+      cmm += "\n";
+      return   cmm;
+   }
    //---
 
 private:
