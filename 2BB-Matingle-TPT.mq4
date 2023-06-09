@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.51e"
+#define     ea_version     "1.52e"
 #property   version        ea_version
 
 #property strict
