@@ -189,12 +189,13 @@ enum ENUM_BandSize {
    ENUM_BandSize_BidMid,      //Bid Mid
    ENUM_BandSize_ProductMid,  //Product Mid
 };
-extern   ENUM_BandSize  BandSize_Mode = ENUM_BandSize_BidMid;
+extern   ENUM_BandSize  BandSize_Mode = ENUM_BandSize_BandMid;
 //---
 int  BBand_getBandSize(ENUM_TIMEFRAMES   timeframe, int vPeriod_, double  BB_Deviation, ENUM_APPLIED_PRICE BB_Applied_price,
                        double   PortHold_Product)
 {
    double BandSize[1][3];
+   
    if(BBand_getValue(timeframe, vPeriod_, BB_Deviation, BB_Applied_price)) {
       int res = ArrayCopy(BandSize, BBand_getValue_Result);
 

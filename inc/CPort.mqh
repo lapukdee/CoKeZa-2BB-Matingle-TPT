@@ -73,6 +73,8 @@ public:
       bool           FoceModify;
       double         Price_SL;
 
+      bool           IsPrice_FixTP;
+
       void           Clear()
       {
          Counter_Standby = 0;
@@ -84,6 +86,8 @@ public:
 
          State = -1;       // 0: Start/Normal,  1: TialingRuner
          FoceModify = false;
+
+         IsPrice_FixTP  =  true;
       }
    };
    sTPT              TPT_Buy;
@@ -164,10 +168,6 @@ public:
                               TPT_Buy.Eq_Runner_   =  false;
                            }
                         }
-
-
-
-
                      }
                      if(_OrderStopLoss == 0) {
                         //Standby
@@ -176,7 +176,13 @@ public:
 
                   }
                   {
+                     double   _OrderTakeProfit   =  OrderTakeProfit();
+                     if(_OrderTakeProfit == 0) {
+                        TPT_Buy.IsPrice_FixTP = false;
+                     }
 
+                  }
+                  {
                      Older_Buy.Last = MathMax(Older_Buy.Last, OrderOpenTime());
                   }
                }
@@ -222,7 +228,13 @@ public:
                      }
 
                   }
+                  {
+                     double   _OrderTakeProfit   =  OrderTakeProfit();
+                     if(_OrderTakeProfit == 0) {
+                        TPT_Sell.IsPrice_FixTP = false;
+                     }
 
+                  }
                   {
                      Older_Sell.Last = MathMax(Older_Sell.Last, OrderOpenTime());
                   }

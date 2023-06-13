@@ -25,7 +25,7 @@
 #property copyright "Copyright 2023, Thongeax Studio TH"
 #property link      "https://www.facebook.com/lapukdee/"
 
-#define     ea_version     "1.52e"
+#define     ea_version     "1.56e"
 #property   version        ea_version
 
 #property strict
@@ -180,7 +180,7 @@ struct sPortHold {
    int               State;         // 0: Start/Normal,  1: TialingRuner
    bool              FoceModify;
    //---
-
+   bool              IsPrice_FixTP;
    void              Clear()
    {
       OP       = -1;
@@ -191,6 +191,8 @@ struct sPortHold {
       PortSL_Price   =  false;
       State          =  -1;
       FoceModify     =  false;
+
+      IsPrice_FixTP  =  true;
    }
 };
 sPortHold   PortHold;
@@ -220,6 +222,9 @@ void  Hold_Mapping()
       PortHold.State          =  Port.TPT_Buy.State;
       PortHold.FoceModify     =  Port.TPT_Buy.FoceModify;
 
+
+      PortHold.IsPrice_FixTP = Port.TPT_Buy.IsPrice_FixTP;
+
    }
    if(Port.cnt_Sel > 0) {
       PortHold.OP             = OP_SELL;
@@ -231,8 +236,13 @@ void  Hold_Mapping()
       PortHold.State          =  Port.TPT_Sell.State;
       PortHold.FoceModify     =  Port.TPT_Sell.FoceModify;
 
+      PortHold.IsPrice_FixTP = Port.TPT_Sell.IsPrice_FixTP;
    }
 }
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+int   Port_cnt_All   =  -1;
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
@@ -241,6 +251,16 @@ void OnTick()
    Port.Calculator();
    {
       Hold_Mapping();
+
+      if(PortHold.OP != -1) {
+
+         if(Port_cnt_All != Port.cnt_All) {
+
+            Port_cnt_All = Port.cnt_All;
+            Profit_Endure.Season_Maker(Port.Older_Lasted);
+
+         }
+      }
    }
 //---
 
@@ -368,22 +388,49 @@ void OnTick()
                      //Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
                   }
 
+                  if(Tailing.Tail_Start == 0 || Tailing.Tail_Point + Tailing.Tail_Step == 0) {
+                     __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
+                                                           PortHold.Product);
+                     Tailing.SetValue(__Profit_TP_Point);
+
+                  }
                   int   Distance_Test  =  (PortHold.State  == 0) ?
                                           Tailing.Tail_Start :
                                           Tailing.Tail_Point + Tailing.Tail_Step;
 
-                  //Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
+                  Print(__FUNCSIG__, __LINE__, "# ", "__Profit_TP_Point: ", __Profit_TP_Point);
+
+                  Print(__FUNCSIG__, __LINE__, "# ", "PortHold.State: ", PortHold.State);
+
+                  Print(__FUNCSIG__, __LINE__, "# ", "Distance_Test: ", Distance_Test);
+                  Print(__FUNCSIG__, __LINE__, "# ", "Distance: ", Distance);
 
                   if(Distance >= Distance_Test) {
                      //--- >> Order Modify Group
+                     Print(__FUNCSIG__, __LINE__, "@ TPT");
                      OrderModifys_SL(PortHold.OP);
                   }
                } else {
+                  Print(__FUNCSIG__, __LINE__, "@ TPT #2");
                   OrderModifys_SL(PortHold.OP);
                }
             }
 
             //------
+         }
+         {
+            if(!PortHold.IsPrice_FixTP) {
+
+               if(Tailing.Tail_Start == 0 || Tailing.Tail_Point + Tailing.Tail_Step == 0) {
+                  __Profit_TP_Point = BBand_getBandSize(exBB_TF, exBB_A_Period, exBB_Deviation_A, exBB_Applied_price_A,
+                                                        PortHold.Product);
+                  Tailing.SetValue(__Profit_TP_Point);
+
+               }
+
+               OrderModifys_Profit(PortHold.OP, PortHold.Cnt);
+
+            }
          }
       }
 
